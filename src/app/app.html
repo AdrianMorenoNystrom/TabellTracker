@@ -3,8 +3,8 @@
     <h1 class="brand">Stryktipstabellen</h1>
     <nav class="actions">
       <button mat-raised-button routerLink="/">Hem</button>
-      <button mat-raised-button (click)="openLogin()" *ngIf="!api.isLoggedIn()">Logga in</button>
-      <button mat-stroked-button color="warn" (click)="logout()" *ngIf="api.isLoggedIn()">Logga ut</button>
+      <button matMiniFab color="secondary" (click)="openLogin()" *ngIf="!api.isLoggedIn()"><mat-icon>login</mat-icon></button>
+      <button matMiniFab color="warn" (click)="logout()" *ngIf="api.isLoggedIn()"><mat-icon>logout</mat-icon></button>
     </nav>
   </div>
 </mat-toolbar>

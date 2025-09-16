@@ -8,10 +8,11 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { LoginDialogComponent } from './components/login-dialog/login-dialog.component';
 import { ApiService } from './services/api.service';
 import { CommonModule } from '@angular/common';
+import { MatIcon } from '@angular/material/icon';
 
 @Component({
   selector: 'app-root',
-  imports: [CommonModule, RouterOutlet, MatToolbarModule, MatButtonModule, RoundlistComponent, TableComponent, MatDialogModule],
+  imports: [CommonModule, RouterOutlet, MatToolbarModule, MatButtonModule, RoundlistComponent, TableComponent, MatDialogModule,MatIcon],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })

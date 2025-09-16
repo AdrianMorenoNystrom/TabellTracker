@@ -22,6 +22,7 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  
 }
 
 /* Responsive two-panel layout: centered column with breathing room */
@@ -44,5 +45,9 @@
   .panels {
     flex-direction: column;
     max-width: min(720px, 100%);
+  }
+
+  .actions{
+    gap: 0.5rem;
   }
 }
