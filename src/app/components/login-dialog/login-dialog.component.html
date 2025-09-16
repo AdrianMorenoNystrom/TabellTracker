@@ -1,0 +1,20 @@
+<h2 mat-dialog-title>Logga in</h2>
+<form [formGroup]="form" (ngSubmit)="submit()" class="form">
+  <mat-form-field appearance="outline">
+    <mat-label>E-post</mat-label>
+    <input matInput type="email" formControlName="username" />
+  </mat-form-field>
+  <mat-form-field appearance="outline">
+    <mat-label>Lösenord</mat-label>
+    <input matInput type="password" formControlName="password" />
+  </mat-form-field>
+
+  <div class="error" *ngIf="error">{{ error }}</div>
+
+  <div class="actions">
+    <button mat-button mat-dialog-close type="button">Avbryt</button>
+    <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid || loading">
+      {{ loading ? 'Loggar in…' : 'Logga in' }}
+    </button>
+  </div>
+</form>

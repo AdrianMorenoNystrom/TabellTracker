@@ -1,0 +1,48 @@
+<div class="header">
+  <h2>Stryktips 25/26</h2>
+  <h3>Totalt antal omgångar: {{ rounds.length }}</h3>
+  <div class="actions">
+    <button mat-raised-button color="primary" class="addRoundButton" (click)="openAddRoundDialog()" *ngIf="api.isLoggedIn()">Lägg till omgång</button>
+
+<mat-form-field>
+  <mat-label>Sortera</mat-label>
+  <mat-select (selectionChange)="onSortChange($event.value)">
+    <mat-option value="recent" >Senaste först</mat-option>
+        <mat-option value="oldest" >Äldst först</mat-option>
+    <mat-option value="score_desc">Högst först</mat-option>
+    <mat-option value="score_asc" >Lägst först</mat-option>
+  </mat-select>
+</mat-form-field>
+
+@if (rounds.length === 0) {
+  <p>Inga omgångar än, lägg till den första för att börja.</p>
+} @else {
+  <div class="rounds">
+    @for (r of rounds; track r.id) {
+      <mat-card appearance="outlined" class="round-card">
+        <mat-card-header>
+          <mat-card-title>Omgång {{ r.roundNumber }}</mat-card-title>
+          <mat-card-subtitle>Vecka {{ r.week }}</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <div
+            class="total"
+            [ngStyle]="{
+              'color': r.totalScore >= 0 && r.totalScore <= 8 ? '#fe020a' :
+                       r.totalScore >= 9 && r.totalScore <= 10 ? '#ffc100' :
+                       r.totalScore >= 11 && r.totalScore <= 13 ? '#63fd01' : 'inherit'
+            }"
+          >
+            <strong>{{ r.totalScore }}</strong>
+          </div>
+        </mat-card-content>
+        <mat-card-actions>
+          <button matButton="outlined" (click)="openDetails(r)">Detaljer</button>
+          <button mat-icon-button color="warn" type="button" (click)="deleteRound(r.id)" *ngIf="api.isLoggedIn()">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    }
+  </div>
+}

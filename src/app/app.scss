@@ -1,0 +1,36 @@
+.navbar{
+    background-color: var(--primary-color);
+    color: whitesmoke;
+    border-radius: 0.2rem;
+}
+
+.buttons{
+    display: flex;
+    gap: 1rem;
+    margin:1rem;
+}
+
+/* Responsive two-panel layout: 50%/50% on wide, stacked on narrow */
+.panels {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  align-items: stretch;
+  height: 70vh;
+}
+
+.panel {
+  flex: 1 1 50%;
+  min-width: 0; /* allow content to shrink in flexbox */
+}
+
+/* Stack on small screens */
+@media (max-width: 768px) {
+  .panels {
+    flex-direction: column;
+    height: auto;
+  }
+  .panel {
+    flex-basis: auto;
+  }
+}

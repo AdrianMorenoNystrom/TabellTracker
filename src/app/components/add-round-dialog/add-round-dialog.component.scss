@@ -1,0 +1,52 @@
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 1rem;
+    height:30rem;
+    overflow-y: scroll;
+}
+
+.row{
+    display: flex;
+    justify-content: space-around;
+}
+
+.players {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.players-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.player-row {
+    align-content: center;
+      display: flex;
+  gap: 12px;
+  padding: 16px;
+}
+
+.player-row .name,
+.player-row .score {
+    width: 100%;
+    display: flex;
+}
+
+.actions {
+    align-self: center;
+    margin-top: 8px;
+    bottom: 0;
+}
+
+.actions button {
+    margin: 1rem;
+}
+
+@media (max-width: 768px) {
+
+}

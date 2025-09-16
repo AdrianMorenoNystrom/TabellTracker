@@ -1,0 +1,36 @@
+.header{
+    padding:1rem;
+    box-shadow: 0 1px 10px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.20);
+    border-radius: 0.2rem;
+    margin-bottom: 0.5rem;
+}
+
+.total{
+    font-size: 2rem;
+}
+
+.round-card{
+    padding:0.5rem;
+    margin: 1rem;
+}
+
+.addRoundButton{
+    background-color: var(--primary-color);
+    color: whitesmoke;
+}
+
+.rounds{
+    height: 50vh;
+    overflow-y: scroll;
+}
+
+.actions button{
+    margin-right: 1rem;
+    margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
+.rounds{
+    height: 50vh;
+}
+}

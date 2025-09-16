@@ -1,0 +1,17 @@
+.form 
+{ 
+    display: flex; 
+    flex-direction: column; 
+    gap: 12px; 
+    padding:1rem;
+}
+.actions{ 
+    display: flex; 
+    justify-content: 
+    flex-end; gap: 8px;
+ }
+.error { 
+    color: #d32f2f; 
+    font-size: 0.9rem; 
+}
+
