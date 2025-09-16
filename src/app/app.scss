@@ -1,22 +1,37 @@
-.navbar{
-    background-color: var(--primary-color);
-    color: whitesmoke;
-    border-radius: 0.2rem;
+﻿.navbar {
+  background-color: var(--primary-color);
+  color: whitesmoke;
+  padding: 0 1.5rem;
 }
 
-.buttons{
-    display: flex;
-    gap: 1rem;
-    margin:1rem;
+.toolbar-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 1.5rem;
 }
 
-/* Responsive two-panel layout: 50%/50% on wide, stacked on narrow */
+.brand {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Responsive two-panel layout: centered column with breathing room */
 .panels {
   display: flex;
-  gap: 16px;
-  padding: 16px;
+  gap: 1.5rem;
+  padding: 1.5rem;
   align-items: stretch;
-  height: 70vh;
+  max-width: 1200px;
+  margin: 0 auto 2rem;
 }
 
 .panel {
@@ -25,12 +40,9 @@
 }
 
 /* Stack on small screens */
-@media (max-width: 768px) {
+@media (max-width: 992px) {
   .panels {
     flex-direction: column;
-    height: auto;
-  }
-  .panel {
-    flex-basis: auto;
+    max-width: min(720px, 100%);
   }
 }

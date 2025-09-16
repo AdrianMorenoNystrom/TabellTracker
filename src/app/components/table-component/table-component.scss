@@ -1,12 +1,40 @@
-.header{
-    display: flex;
-    align-items: center;
+﻿.header {
+  display: flex;
+  align-items: center;
 }
 
-.addPlayerButton{
-    margin: 1rem;
+.spacer {
+  flex: 1 1 auto;
 }
 
-.spacer { flex: 1 1 auto; }
-.filter { width: 220px; }
+.player-table {
+  width: 100%;
+  margin-top: 12px;
+  border-radius: 12px;
+  overflow: hidden;
+}
 
+.player-table th {
+  background-color: rgba(0, 66, 122, 0.08);
+  font-weight: 600;
+}
+
+.player-table tr.mat-row:hover {
+  background-color: rgba(0, 66, 122, 0.06);
+  cursor: pointer;
+}
+
+.leader-row {
+  font-weight: 600;
+  background: rgba(99, 253, 1, 0.12);
+}
+
+.actions-cell {
+  text-align: right;
+}
+
+@media (max-width: 600px) {
+  .player-table {
+    font-size: 0.9rem;
+  }
+}
