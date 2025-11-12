@@ -1,0 +1,53 @@
+<mat-card>
+  <mat-card-header class="header">
+    <h2>Krönikor 25/26</h2>
+    <span class="spacer"></span>
+
+    <button
+      *ngIf="api.isLoggedIn()"
+      mat-stroked-button
+      color="primary"
+      (click)="newArticle()"
+    >
+      Ny krönika
+    </button>
+    
+  </mat-card-header>
+
+  <mat-card-content>
+    <ng-container *ngIf="articles?.length; else empty">
+<mat-card
+  *ngFor="let a of articles"
+  class="article-card"
+  (click)="openArticle(a)"
+>
+  <div class="article-card-header">
+    <div>
+      <mat-card-title>{{ a.title }}</mat-card-title>
+      <mat-card-subtitle>
+        {{ a.created_at | date:'yyyy-MM-dd' }}
+      </mat-card-subtitle>
+    </div>
+
+    <button
+      *ngIf="api.isLoggedIn()"
+      mat-icon-button
+      color="warn"
+      (click)="deleteArticle(a, $event)"
+      aria-label="Radera krönika"
+    >
+      <mat-icon>delete</mat-icon>
+    </button>
+  </div>
+
+  <p>
+    {{ a.content | slice: 0:160 }}{{ a.content.length > 160 ? '…' : '' }}
+  </p>
+</mat-card>
+    </ng-container>
+
+    <ng-template #empty>
+      <p>Inga krönikor än.</p>
+    </ng-template>
+  </mat-card-content>
+</mat-card>

@@ -4,6 +4,7 @@ import { Player } from '../interfaces/player';
 import { Round, RoundCreate } from '../interfaces/round';
 import { environment } from '../../environments/environment';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { Article } from '../interfaces/article';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
@@ -177,4 +178,63 @@ getPlayers(): Observable<Player[]> {
     const totalScore = (totRes.data?.totalscore as number | undefined) ?? round.players.reduce((s, p) => s + (p.score || 0), 0);
     return { ok: true, id: roundId, totalScore };
   }
+
+
+  getArticles() {
+  return from(
+    this.supabase
+      .from('articles')
+      .select('*')
+      .order('created_at', { ascending: false })
+  ).pipe(
+    map(({ data, error }) => {
+      if (error) throw error;
+      return (data || []) as Article[];
+    })
+  );
+}
+
+getArticleById(id: number) {
+  return from(
+    this.supabase
+      .from('articles')
+      .select('*')
+      .eq('id', id)
+      .single()
+  ).pipe(
+    map(({ data, error }) => {
+      if (error) throw error;
+      return data as Article;
+    })
+  );
+}
+
+addArticle(input: { title: string; content: string }) {
+  return from(
+    this.supabase
+      .from('articles')
+      .insert(input)
+      .select('id')
+      .single()
+  ).pipe(
+    map(({ data, error }) => {
+      if (error) throw error;
+      return data?.id as number;
+    })
+  );
+}
+
+deleteArticle(id: number) {
+  return from(
+    this.supabase
+      .from('articles')
+      .delete()
+      .eq('id', id)
+  ).pipe(
+    map(({ error }) => {
+      if (error) throw error;
+      return { ok: true };
+    })
+  );
+}
 }

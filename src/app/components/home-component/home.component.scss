@@ -1,0 +1,21 @@
+.panels {
+  display: flex;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  align-items: stretch;
+  max-width: 1200px;
+  margin: 0 auto 2rem;
+}
+
+.panel {
+  flex: 1 1 50%;
+  min-width: 0; /* allow content to shrink in flexbox */
+}
+
+/* Stack on small screens */
+@media (max-width: 992px) {
+  .panels {
+    flex-direction: column;
+    max-width: min(720px, 100%);
+  }
+}

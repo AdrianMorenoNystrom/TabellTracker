@@ -1,0 +1,43 @@
+
+    <div class="article-container">
+        <ng-container *ngIf="!loading && !error; else stateTpl">
+
+  <mat-card class="article-detail-card">
+    <mat-card-header>
+      <mat-card-title>{{ article?.title }}</mat-card-title>
+      <mat-card-subtitle>
+        {{ article?.created_at | date:'yyyy-MM-dd HH:mm' }}
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div class="article-body">
+        {{ article?.content }}
+      </div>
+
+      <div class="article-back">
+        <button mat-stroked-button color="primary" (click)="goBack()">
+          Tillbaka till krönikor
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</ng-container>
+
+<ng-template #stateTpl>
+  <mat-card class="article-detail-card">
+    <mat-card-content>
+      <p *ngIf="loading">Laddar krönika…</p>
+      <p *ngIf="!loading && error">{{ error }}</p>
+      <button
+        *ngIf="!loading"
+        mat-stroked-button
+        color="primary"
+        (click)="goBack()"
+      >
+        Tillbaka
+      </button>
+    </mat-card-content>
+  </mat-card>
+</ng-template>
+    </div>
