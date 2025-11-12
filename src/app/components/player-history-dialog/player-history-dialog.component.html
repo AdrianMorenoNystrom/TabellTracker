@@ -6,13 +6,18 @@
       <th mat-header-cell *matHeaderCellDef>Omgång</th>
       <td mat-cell *matCellDef="let e">{{ e.roundNumber }}</td>
     </ng-container>
+
     <ng-container matColumnDef="week">
       <th mat-header-cell *matHeaderCellDef>Vecka</th>
       <td mat-cell *matCellDef="let e">{{ e.week }}</td>
     </ng-container>
+
     <ng-container matColumnDef="score">
       <th mat-header-cell *matHeaderCellDef>Rätt</th>
-      <td mat-cell *matCellDef="let e">{{ e.score }}</td>
+      <td mat-cell *matCellDef="let e">
+        {{ e.score }}/{{ e.matchesPicked }}
+        <span *ngIf="e.score === e.matchesPicked"> ✅</span>
+      </td>
     </ng-container>
 
     <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
@@ -22,4 +27,3 @@
 <div mat-dialog-actions align="end">
   <button mat-button mat-dialog-close>Stäng</button>
 </div>
-

@@ -69,31 +69,37 @@ getPlayers(): Observable<Player[]> {
   }
 
   // Rounds
-  getRounds(): Observable<Round[]> {
-    return from(
-      this.supabase
-        .from('rounds')
-        .select(`
-          id, roundnumber, week, totalscore,
-          round_players (
-            score,
-            player:players ( id, name )
-          )
-        `)
-        .order('id', { ascending: false })
-    ).pipe(
-      map(({ data, error }) => {
-        if (error) throw error;
-        return (data || []).map((r: any) => ({
-          id: r.id,
-          roundNumber: r.roundnumber,
-          week: r.week,
-          totalScore: r.totalscore,
-          players: (r.round_players || []).map((rp: any) => ({ id: rp.player?.id, name: rp.player?.name, score: rp.score }))
-        })) as Round[];
-      })
-    );
-  }
+getRounds(): Observable<Round[]> {
+  return from(
+    this.supabase
+      .from('rounds')
+      .select(`
+        id, roundnumber, week, totalscore,
+        round_players (
+          score,
+          matches_picked,
+          player:players ( id, name )
+        )
+      `)
+      .order('id', { ascending: false })
+  ).pipe(
+    map(({ data, error }) => {
+      if (error) throw error;
+      return (data || []).map((r: any) => ({
+        id: r.id,
+        roundNumber: r.roundnumber,
+        week: r.week,
+        totalScore: r.totalscore,
+        players: (r.round_players || []).map((rp: any) => ({
+          id: rp.player?.id,
+          name: rp.player?.name,
+          score: rp.score,
+          matchesPicked: rp.matches_picked
+        }))
+      })) as Round[];
+    })
+  );
+}
 
   // Realtime: live stream of rounds with nested players
   watchRounds(): Observable<Round[]> {
@@ -145,39 +151,40 @@ getPlayers(): Observable<Player[]> {
   }
 
   // Helpers
-  private async addRoundSupabase(round: RoundCreate): Promise<{ ok: boolean; id: number; totalScore: number }>{
-    // Upsert players by name
-    const uniqueNames = Array.from(new Set(round.players.map(p => p.name)));
-    const upsertRes = await this.supabase
-      .from('players')
-      .upsert(uniqueNames.map(n => ({ name: n })), { onConflict: 'name' })
-      .select('id,name');
-    if (upsertRes.error) throw upsertRes.error;
-    const nameToId = new Map((upsertRes.data || []).map((p: any) => [p.name, p.id]));
+private async addRoundSupabase(round: RoundCreate): Promise<{ ok: boolean; id: number; totalScore: number }>{
+  // Upsert players by name
+  const uniqueNames = Array.from(new Set(round.players.map(p => p.name)));
+  const upsertRes = await this.supabase
+    .from('players')
+    .upsert(uniqueNames.map(n => ({ name: n })), { onConflict: 'name' })
+    .select('id,name');
+  if (upsertRes.error) throw upsertRes.error;
+  const nameToId = new Map((upsertRes.data || []).map((p: any) => [p.name, p.id]));
 
-    // Create round
-    const roundRes = await this.supabase
-      .from('rounds')
-      .insert({ roundnumber: round.roundNumber, week: round.week })
-      .select('id')
-      .single();
-    if (roundRes.error) throw roundRes.error;
-    const roundId = roundRes.data.id as number;
+  // Create round
+  const roundRes = await this.supabase
+    .from('rounds')
+    .insert({ roundnumber: round.roundNumber, week: round.week })
+    .select('id')
+    .single();
+  if (roundRes.error) throw roundRes.error;
+  const roundId = roundRes.data.id as number;
 
-    // Insert scores
-    const rpPayload = round.players.map(p => ({
-      round_id: roundId,
-      player_id: nameToId.get(p.name),
-      score: p.score || 0,
-    }));
-    const rpRes = await this.supabase.from('round_players').insert(rpPayload);
-    if (rpRes.error) throw rpRes.error;
+  // Insert scores + matches_picked 👇
+  const rpPayload = round.players.map(p => ({
+    round_id: roundId,
+    player_id: nameToId.get(p.name),
+    score: p.score || 0,
+    matches_picked: p.matchesPicked ?? 3, // defaulta till 3 om inget satt
+  }));
+  const rpRes = await this.supabase.from('round_players').insert(rpPayload);
+  if (rpRes.error) throw rpRes.error;
 
-    // Fetch recomputed total
-    const totRes = await this.supabase.from('rounds').select('totalscore').eq('id', roundId).single();
-    const totalScore = (totRes.data?.totalscore as number | undefined) ?? round.players.reduce((s, p) => s + (p.score || 0), 0);
-    return { ok: true, id: roundId, totalScore };
-  }
+  // Fetch recomputed total
+  const totRes = await this.supabase.from('rounds').select('totalscore').eq('id', roundId).single();
+  const totalScore = (totRes.data?.totalscore as number | undefined) ?? round.players.reduce((s, p) => s + (p.score || 0), 0);
+  return { ok: true, id: roundId, totalScore };
+}
 
 
   getArticles() {
