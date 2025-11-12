@@ -12,6 +12,12 @@
     justify-content: space-around;
 }
 
+    .matches-delete-wrapper{
+        display: flex;
+        align-items: center;
+        flex-direction: row;
+    }
+
 .players {
     display: flex;
     flex-direction: column;
@@ -48,5 +54,13 @@
 }
 
 @media (max-width: 768px) {
+    .player-row{
+        display: flex;
+        flex-direction: column;
+    }
 
+    .matches-delete-wrapper{
+        display: flex;
+        align-items: center;
+    }
 }

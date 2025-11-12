@@ -7,7 +7,8 @@ import { ApiService } from '../../services/api.service';
 import { Player } from '../../interfaces/player';
 import { Round } from '../../interfaces/round';
 
-interface Entry { roundNumber: number; week: number; score: number; }
+interface Entry { roundNumber: number; week: number; score: number;  matchesPicked: number;
+ }
 
 @Component({
   selector: 'app-player-history-dialog',
@@ -25,18 +26,24 @@ export class PlayerHistoryDialogComponent {
     this.load();
   }
 
-  private load() {
-    this.api.getRounds().subscribe((rounds: Round[]) => {
-      const out: Entry[] = [];
-      for (const r of rounds || []) {
-        const p = r.players?.find(pp => pp.id === this.data.player.id || pp.name === this.data.player.name);
-        if (p) out.push({ roundNumber: r.roundNumber, week: r.week, score: p.score });
+private load() {
+  this.api.getRounds().subscribe((rounds: Round[]) => {
+    const out: Entry[] = [];
+    for (const r of rounds || []) {
+      const p = r.players?.find(pp => pp.id === this.data.player.id || pp.name === this.data.player.name);
+      if (p) {
+        out.push({
+          roundNumber: r.roundNumber,
+          week: r.week,
+          score: p.score,
+          matchesPicked: p.matchesPicked ?? 3 
+        });
       }
-      // Sort by roundNumber desc, then week desc
-      out.sort((a, b) => (b.roundNumber - a.roundNumber) || (b.week - a.week));
-      this.entries = out;
-      this.loading = false;
-    });
-  }
+    }
+    out.sort((a, b) => (b.roundNumber - a.roundNumber) || (b.week - a.week));
+    this.entries = out;
+    this.loading = false;
+  });
+}
 }
 

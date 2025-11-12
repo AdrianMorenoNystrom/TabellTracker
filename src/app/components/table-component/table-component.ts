@@ -11,40 +11,61 @@ import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { PlayerHistoryDialogComponent } from '../player-history-dialog/player-history-dialog.component';
-import { NgIf } from '@angular/common';
+import { DecimalPipe, NgIf, NgFor } from '@angular/common';
 
 @Component({
   selector: 'app-table-component',
-  imports: [MatCardModule,MatButtonModule,MatIconModule, MatTableModule, MatSortModule, MatFormFieldModule, MatInputModule, MatDialogModule,NgIf],
+  imports: [MatCardModule,MatButtonModule,MatIconModule, MatTableModule, MatSortModule, MatFormFieldModule, MatInputModule, MatDialogModule,NgIf,DecimalPipe,NgFor],
   templateUrl: './table-component.html',
   styleUrl: './table-component.scss'
 })
 export class TableComponent implements AfterViewInit {
     constructor(public api: ApiService, private dialog: MatDialog) {}
   players = new MatTableDataSource<Player>([]);
-  displayedColumns = ['name', 'score', 'actions'];
+displayedColumns = ['name', 'totalMatches', 'score', 'avgRound', 'actions'];
   @ViewChild(MatSort) sort!: MatSort;
-
+topScore: number | null = null;
+topMatches: number | null = null;
 
   ngOnInit() {
-    this.api.watchPlayers().subscribe(p => {
-      const arr = (p ?? []).slice().sort((a, b) => b.score - a.score);
-      this.players.data = arr;
+  this.api.watchPlayers().subscribe(p => {
+    const arr = (p ?? []).slice().sort((a, b) => {
+      // 1) mest poäng vinner
+      if (b.score !== a.score) return b.score - a.score;
+      // 2) vid lika poäng – färre matcher vinner
+      const aMatches = a.total_matches ?? 0;
+      const bMatches = b.total_matches ?? 0;
+      return aMatches - bMatches;
     });
-  }
 
-  ngAfterViewInit(): void {
-    this.players.sortingDataAccessor = (item: Player, property: string): any => {
-      switch (property) {
-        case 'score':
-          return Number(item.score) || 0;
-        default:
-          return (item as any)[property];
-      }
-    };
+    this.players.data = arr;
 
-    this.players.sort = this.sort;
-  }
+    if (arr.length) {
+      this.topScore = arr[0].score;
+      this.topMatches = arr[0].total_matches ?? 0;
+    } else {
+      this.topScore = null;
+      this.topMatches = null;
+    }
+  });
+}
+
+ngAfterViewInit(): void {
+  this.players.sortingDataAccessor = (item: Player, property: string): any => {
+    switch (property) {
+      case 'score':
+        return Number(item.score) || 0;
+      case 'totalMatches':
+        return Number(item.total_matches) || 0;
+      case 'avgRound':
+        return Number(item.avg_score_per_round) || 0;
+      default:
+        return (item as any)[property];
+    }
+  };
+
+  this.players.sort = this.sort;
+}
 
   loadPlayers() {
     this.api.getPlayers().subscribe(p => {

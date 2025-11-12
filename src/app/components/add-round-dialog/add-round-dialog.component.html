@@ -1,4 +1,5 @@
 <h2 mat-dialog-title>Lägg till omgång</h2>
+
 <form [formGroup]="form" class="form" (ngSubmit)="submit()">
   <div class="row">
     <mat-form-field class appearance="outline">
@@ -15,28 +16,71 @@
     <div class="players-header">
       <h3>Spelare</h3>
       <div class="header-actions">
-        <button mat-stroked-button color="primary" type="button" (click)="addPlayer()">Add row</button>
+        <button
+          mat-stroked-button
+          color="primary"
+          type="button"
+          (click)="addPlayer()"
+        >
+          Add row
+        </button>
       </div>
     </div>
 
-    <div class="player-row" *ngFor="let group of players.controls; let i = index" [formGroupName]="i">
+    <div
+      class="player-row"
+      *ngFor="let group of players.controls; let i = index"
+      [formGroupName]="i"
+    >
       <mat-form-field appearance="outline" class="name">
         <mat-label>Namn</mat-label>
         <input matInput formControlName="name" />
       </mat-form-field>
+
       <mat-form-field appearance="outline" class="score">
         <mat-label>Antal rätt</mat-label>
         <input matInput type="number" formControlName="score" />
       </mat-form-field>
-      <button mat-icon-button color="warn" type="button" (click)="removePlayer(i)">
+
+      <div class="matches-delete-wrapper">
+      <div class="matches">
+        <button
+          mat-stroked-button
+          type="button"
+          (click)="setFourFor(i)"
+          [color]="group.get('matchesPicked')?.value === 4 ? 'primary' : undefined"
+        >
+          {{ group.get('matchesPicked')?.value === 4 ? '4 matcher' : '3 matcher' }}
+        </button>
+      </div>
+
+      <button
+        mat-icon-button
+        color="warn"
+        type="button"
+        (click)="removePlayer(i)"
+      >
         <mat-icon>delete</mat-icon>
       </button>
+      </div>
+  <mat-divider></mat-divider>
+
     </div>
   </div>
+
   <mat-divider></mat-divider>
 
   <div class="actions">
-    <button mat-button type="button" color="warn" (click)="close()">Stäng</button>
-    <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid || submitting">Spara</button>
+    <button mat-button type="button" color="warn" (click)="close()">
+      Stäng
+    </button>
+    <button
+      mat-raised-button
+      color="primary"
+      type="submit"
+      [disabled]="form.invalid || submitting"
+    >
+      Spara
+    </button>
   </div>
 </form>
