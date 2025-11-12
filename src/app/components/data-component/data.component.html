@@ -1,0 +1,83 @@
+<div *ngIf="loading">
+  <p>Laddar statistik…</p>
+</div>
+
+<div *ngIf="!loading">
+
+  <!-- Senaste 4-läggaren -->
+  <mat-card class="data-card" *ngIf="lastFourPicker">
+    <mat-card-header>
+      <mat-card-title>Senaste 4-läggaren</mat-card-title>
+      <mat-card-subtitle>
+        Omgång {{ lastFourPicker.roundNumber }} • Vecka {{ lastFourPicker.week }}
+      </mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <p>
+        <strong>{{ lastFourPicker.playerName }}</strong> la 4 matcher och fick
+        <strong>{{ lastFourPicker.score }}/{{ lastFourPicker.matchesPicked }}</strong>
+        rätt.
+      </p>
+      <p>
+        Omgångens totalsumma:
+        <strong>{{ lastFourPicker.totalScore }}</strong> rätt.
+      </p>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card class="data-card" *ngIf="!lastFourPicker">
+    <mat-card-header>
+      <mat-card-title>Senaste 4-läggaren</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <p>Ingen runda med 4 matcher registrerad ännu.</p>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Per-spelare-kort -->
+  <mat-card
+    class="data-card player-card"
+    *ngFor="let s of playerStats"
+  >
+    <mat-card-header>
+      <mat-card-title>{{ s.player.name }}</mat-card-title>
+      <mat-card-subtitle>
+        Totalt: {{ s.player.score }} rätt på {{ s.player.total_matches }} matcher
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div class="badges" *ngIf="s.isFormKing || s.isFullPotKing">
+        <span class="badge" *ngIf="s.isFormKing">🔥 Formstarkast</span>
+        <span class="badge" *ngIf="s.isFullPotKing">⭐ Flest fullpott</span>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat">
+          <div class="label">Snitt / omgång</div>
+          <div class="value">
+            {{ s.player.avg_score_per_round | number:'1.1-2' }}
+          </div>
+        </div>
+
+        <div class="stat">
+          <div class="label">Senaste 5 omg</div>
+          <div class="value">
+            {{ s.last5Avg | number:'1.1-2' }}
+          </div>
+        </div>
+
+        <div class="stat">
+          <div class="label">Full pott</div>
+          <div class="value">
+            {{ s.fullPotsTotal }} st
+          </div>
+          <div class="sub">
+            ({{ s.fullPots3 }}×3/3 & {{ s.fullPots4 }}×4/4)
+          </div>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+</div>
