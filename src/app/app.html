@@ -2,20 +2,41 @@
   <div class="toolbar-content">
     <h1 class="brand">Stryktipstabellen</h1>
     <nav class="actions">
-      <button mat-raised-button routerLink="/">Hem</button>
-      <button matMiniFab color="secondary" (click)="openLogin()" *ngIf="!api.isLoggedIn()"><mat-icon>login</mat-icon></button>
-      <button matMiniFab color="warn" (click)="logout()" *ngIf="api.isLoggedIn()"><mat-icon>logout</mat-icon></button>
+      <button
+        mat-raised-button
+        routerLink="/"
+        routerLinkActive="active-link"
+        [routerLinkActiveOptions]="{ exact: true }"
+      >
+        Hem
+      </button>
+
+      <button
+        mat-raised-button
+        routerLink="/kronikor"
+        routerLinkActive="active-link"
+      >
+        Krönikor
+      </button>
+
+      <button
+        matMiniFab
+        color="secondary"
+        (click)="openLogin()"
+        *ngIf="!api.isLoggedIn()"
+      >
+        <mat-icon>login</mat-icon>
+      </button>
+      <button
+        matMiniFab
+        color="warn"
+        (click)="logout()"
+        *ngIf="api.isLoggedIn()"
+      >
+        <mat-icon>logout</mat-icon>
+      </button>
     </nav>
   </div>
 </mat-toolbar>
 
-<main class="panels">
-  <section class="panel">
-    <app-table-component></app-table-component>
-  </section>
-  <section class="panel">
-    <app-roundlist-component></app-roundlist-component>
-  </section>
-</main>
-
-<router-outlet />
+<router-outlet></router-outlet>
