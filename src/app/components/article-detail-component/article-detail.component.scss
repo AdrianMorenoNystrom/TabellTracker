@@ -1,0 +1,24 @@
+.article-container{
+    display: flex;
+    justify-content: center;
+}
+
+.article-detail-card {
+  max-width: 800px;
+  margin: 0.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1rem;
+}
+
+.article-body {
+  white-space: pre-wrap; // behåll radbrytningar
+  line-height: 1.6;
+  font-size: 1rem;
+  margin-bottom: 16px;
+}
+
+.article-back {
+  margin-top: 8px;
+  display: flex;
+  justify-content: flex-end;
+}

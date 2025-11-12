@@ -1,5 +1,5 @@
-import { Component, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+﻿import { Component, signal } from '@angular/core';
+import { RouterOutlet,RouterLink, RouterLinkActive  } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { RoundlistComponent } from "./components/roundlist-component/roundlist-component";
@@ -12,7 +12,7 @@ import { MatIcon } from '@angular/material/icon';
 
 @Component({
   selector: 'app-root',
-  imports: [CommonModule, RouterOutlet, MatToolbarModule, MatButtonModule, RoundlistComponent, TableComponent, MatDialogModule,MatIcon],
+  imports: [CommonModule, RouterOutlet, MatToolbarModule, MatButtonModule, RoundlistComponent, TableComponent, MatDialogModule,MatIcon,RouterLink,RouterLinkActive],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
