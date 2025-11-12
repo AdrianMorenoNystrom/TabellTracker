@@ -11,18 +11,18 @@ import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { PlayerHistoryDialogComponent } from '../player-history-dialog/player-history-dialog.component';
-import { NgIf } from '@angular/common';
+import { DecimalPipe, NgIf } from '@angular/common';
 
 @Component({
   selector: 'app-table-component',
-  imports: [MatCardModule,MatButtonModule,MatIconModule, MatTableModule, MatSortModule, MatFormFieldModule, MatInputModule, MatDialogModule,NgIf],
+  imports: [MatCardModule,MatButtonModule,MatIconModule, MatTableModule, MatSortModule, MatFormFieldModule, MatInputModule, MatDialogModule,NgIf,DecimalPipe],
   templateUrl: './table-component.html',
   styleUrl: './table-component.scss'
 })
 export class TableComponent implements AfterViewInit {
     constructor(public api: ApiService, private dialog: MatDialog) {}
   players = new MatTableDataSource<Player>([]);
-  displayedColumns = ['name', 'score', 'actions'];
+displayedColumns = ['name', 'score', 'totalMatches', 'avgRound', 'actions'];
   @ViewChild(MatSort) sort!: MatSort;
 
 
@@ -33,18 +33,22 @@ export class TableComponent implements AfterViewInit {
     });
   }
 
-  ngAfterViewInit(): void {
-    this.players.sortingDataAccessor = (item: Player, property: string): any => {
-      switch (property) {
-        case 'score':
-          return Number(item.score) || 0;
-        default:
-          return (item as any)[property];
-      }
-    };
+ngAfterViewInit(): void {
+  this.players.sortingDataAccessor = (item: Player, property: string): any => {
+    switch (property) {
+      case 'score':
+        return Number(item.score) || 0;
+      case 'totalMatches':
+        return Number(item.total_matches) || 0;
+      case 'avgRound':
+        return Number(item.avg_score_per_round) || 0;
+      default:
+        return (item as any)[property];
+    }
+  };
 
-    this.players.sort = this.sort;
-  }
+  this.players.sort = this.sort;
+}
 
   loadPlayers() {
     this.api.getPlayers().subscribe(p => {

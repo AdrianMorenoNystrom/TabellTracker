@@ -22,25 +22,20 @@ export class ApiService {
   }
 
   // Players
-  getPlayers(): Observable<Player[]> {
-    // Aggregate client-side to avoid relying on a view
-    return from(Promise.all([
-      this.supabase.from('players').select('id,name'),
-      this.supabase.from('round_players').select('player_id,score')
-    ])).pipe(
-      map(([playersRes, rpRes]) => {
-        if (playersRes.error) throw playersRes.error;
-        if (rpRes.error) throw rpRes.error;
-        const totals = new Map<number, number>();
-        (rpRes.data || []).forEach((row: any) => {
-          totals.set(row.player_id, (totals.get(row.player_id) || 0) + (row.score || 0));
-        });
-        const out: Player[] = (playersRes.data || []).map((p: any) => ({ id: p.id, name: p.name, score: totals.get(p.id) || 0 }));
-        out.sort((a, b) => b.score - a.score);
-        return out;
-      })
-    );
-  }
+getPlayers(): Observable<Player[]> {
+  return from(
+    this.supabase
+      .from('player_stats')
+      .select('id, name, score, total_matches, rounds_played, avg_score_per_round')
+      .order('score', { ascending: false })
+  ).pipe(
+    map(({ data, error }) => {
+      if (error) throw error;
+      // Supabase datan matchar Player-interfacet direkt
+      return (data || []) as Player[];
+    })
+  );
+}
 
   // Realtime: live stream of leaderboard (players with totals)
   watchPlayers(): Observable<Player[]> {

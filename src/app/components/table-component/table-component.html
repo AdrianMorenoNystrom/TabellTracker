@@ -18,6 +18,23 @@
         <th mat-header-cell *matHeaderCellDef mat-sort-header>Totalt antal rätt</th>
         <td mat-cell *matCellDef="let p">{{ p.score }}</td>
       </ng-container>
+<ng-container matColumnDef="totalMatches">
+  <th mat-header-cell *matHeaderCellDef mat-sort-header>
+    Totala matcher
+  </th>
+  <td mat-cell *matCellDef="let p">
+    {{ p.total_matches }}
+  </td>
+</ng-container>
+
+<ng-container matColumnDef="avgRound">
+  <th mat-header-cell *matHeaderCellDef mat-sort-header>
+    Snitt / omgång
+  </th>
+  <td mat-cell *matCellDef="let p">
+    {{ p.avg_score_per_round | number:'1.2-2' }}
+  </td>
+</ng-container>
       <ng-container matColumnDef="actions">
         <th mat-header-cell *matHeaderCellDef></th>
         <td mat-cell *matCellDef="let p" class="actions-cell">
