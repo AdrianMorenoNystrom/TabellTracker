@@ -6,6 +6,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { ApiService } from '../../services/api.service';
 import { Player } from '../../interfaces/player';
 import { Round } from '../../interfaces/round';
+import { TotalScoreDataComponent } from "../total-score-data/total-score-data.component";
 
 interface PlayerStatsCard {
   player: Player;
@@ -29,7 +30,7 @@ interface FourPickerInfo {
 @Component({
   selector: 'app-data',
   standalone: true,
-  imports: [CommonModule, MatCardModule, MatListModule, MatDividerModule],
+  imports: [CommonModule, MatCardModule, MatListModule, MatDividerModule, TotalScoreDataComponent],
   templateUrl: './data.component.html',
   styleUrl: './data.component.scss'
 })
