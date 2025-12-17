@@ -1,0 +1,14 @@
+.data-card {
+  margin-bottom: 1rem;
+  border-radius: 1rem;
+      background-color: rgba(136, 136, 136, 0.048);
+
+}
+.chart-container {
+  position: relative;
+  width: 100%;
+  height: 260px; /* mobilvänlig höjd */
+}
+@media (max-width: 600px) {
+  .chart-container { height: 220px; }
+}
