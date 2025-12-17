@@ -1,0 +1,95 @@
+:host {
+  display: block;
+  max-width: 900px;
+  margin: 12px auto;
+  padding: 0 10px;
+}
+
+.tip-card { 
+    border-radius: 16px; 
+}
+
+.status-row { 
+    margin-bottom: 12px; 
+}
+
+
+mat-chip.ok { opacity: 1; }
+mat-chip.no { opacity: .55; }
+
+.matches { 
+    display: flex;
+    flex-direction: column; 
+    gap: 1rem; 
+}
+
+.match {
+  border: 1px solid rgba(0,0,0,.08);
+  border-radius: 14px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.match-info {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 10px;
+  align-items: center;
+}
+
+.teams{
+    display: flex;
+    gap: 1rem;
+}
+
+.no { font-weight: 700; opacity: .7; text-align: center; }
+
+.teams .home { font-weight: 700; }
+.teams .away { opacity: .8; }
+
+.pick-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  align-items: center;
+}
+
+.pick {
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid rgba(0,0,0,.15);
+  background: transparent;
+  font-weight: 800;
+  font-size: 1rem;
+}
+
+.pick.active {
+  background: rgba(0, 66, 122, 1);
+  color: white;
+}
+
+.clear {
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid rgba(0,0,0,.12);
+  background: rgba(0,0,0,.04);
+}
+
+.submit-row {
+  margin-top: 16px;
+  text-align: center;
+}
+
+.submit{
+    background-color: rgba(0, 66, 122, 1);
+    color: white;
+    font-size: 1rem;
+    font-weight: 550;
+}
+
+.submit:disabled {
+  background-color: rgba(200, 200, 200, 1);
+  color: rgb(0, 0, 0,0.5);
+}

@@ -36,7 +36,7 @@ export class TotalScoreDataComponent {
         ticks: { stepSize: 1 }
       }
     },
-    elements: { point: { radius: 3 }, line: { tension: 0.25 } }
+    elements: { point: { radius: 3 }, line: { tension: 0.3 } }
   };
 
   constructor(private api: ApiService) {}

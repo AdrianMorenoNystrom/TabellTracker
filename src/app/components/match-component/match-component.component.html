@@ -1,0 +1,57 @@
+<mat-card class="tip-card" appearance="outlined" *ngIf="!loading; else skel">
+  <mat-card-header>
+    <mat-card-title>Stryktipset – Omgång {{ roundNumber }}</mat-card-title>
+
+  </mat-card-header>
+
+  <mat-card-content class="content">
+    <div class="status-row">
+      <mat-chip-listbox>
+        <mat-chip *ngFor="let s of status" [class.ok]="s.submitted" [class.no]="!s.submitted">
+          {{ s.submitted ? '✅' : '⏳' }} {{ s.name }}
+        </mat-chip>
+      </mat-chip-listbox>
+    </div>
+
+    <div class="matches">
+      <div class="match" *ngFor="let m of matches">
+        <div class="match-info">
+          <div class="no">#{{ m.matchNo }}</div>
+          <div class="teams">
+            <div class="home">{{ m.home }}</div>
+            <div class="vs">–</div>
+            <div class="away">{{ m.away }}</div>
+          </div>
+        </div>
+
+        <div class="pick-row">
+          <button class="pick"
+                  [class.active]="isActive(m.matchNo,'1')"
+                  [disabled]="isDisabled(m.matchNo,'1')"
+                  (click)="toggleOutcome(m.matchNo,'1')">1</button>
+
+          <button class="pick"
+                  [class.active]="isActive(m.matchNo,'X')"
+                  [disabled]="isDisabled(m.matchNo,'X')"
+                  (click)="toggleOutcome(m.matchNo,'X')">X</button>
+
+          <button class="pick"
+                  [class.active]="isActive(m.matchNo,'2')"
+                  [disabled]="isDisabled(m.matchNo,'2')"
+                  (click)="toggleOutcome(m.matchNo,'2')">2</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="submit-row">
+      <button mat-raised-button
+              class="submit" [class.ready]="canSubmit()" [disabled]="!canSubmit()">
+        Lås in rad
+      </button>
+    </div>
+  </mat-card-content>
+</mat-card>
+
+<ng-template #skel>
+  <p>Laddar…</p>
+</ng-template>
