@@ -6,9 +6,15 @@ export const config = { runtime: 'nodejs' };
 export default async function handler(req, res) {
   try {
     // 1) Supabase (server-side)
-    const supabaseUrl = 'https://ywamyalehanpsnvskgfl.supabase.co';
-    const serviceKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl3YW15YWxlaGFucHNudnNrZ2ZsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2Mjg3Nzk0OCwiZXhwIjoyMDc4NDUzOTQ4fQ.RKN9sxfwvM9k0x-Z5aDkVHjAC8iWRuX-QmSb6n4ily8'
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
+const secret = process.env.CRON_SECRET;
+const got = req.query.secret;
+
+if (!secret || got !== secret) {
+  return res.status(401).json({ error: 'Unauthorized' });
+}
     if (!supabaseUrl || !serviceKey) {
       return res.status(500).json({ error: 'Missing Supabase credentials' });
     }
