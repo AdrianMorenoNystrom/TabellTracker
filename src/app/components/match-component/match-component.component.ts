@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, NgFor } from '@angular/common';
 import { combineLatest } from 'rxjs';
 import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
@@ -7,13 +7,14 @@ import { MatButtonModule } from '@angular/material/button';
 
 import { TipsMockService } from '../../services/tips-mock.service';
 import { Match, TipStatus, MyPick, Pick } from '../../interfaces/tips';
-
+import { TipsDataService } from '../../services/tips-data.service';
+import { MatDividerModule } from '@angular/material/divider';
 type Outcome = '1' | 'X' | '2';
 
 @Component({
   standalone: true,
   selector: 'app-match-component.component',
-  imports: [CommonModule, MatCardModule, MatChipsModule, MatButtonModule],
+  imports: [CommonModule, MatCardModule, MatChipsModule, MatButtonModule,NgFor,MatDividerModule],
   templateUrl: './match-component.component.html',
   styleUrl: './match-component.component.scss'
 })
@@ -22,37 +23,37 @@ export class MatchComponentComponent {
 
   roundNumber = 0;
   maxPicks: 3 | 4 = 3;
-
+  thisWeek: number = this.getWeekNumber(new Date());
   matches: Match[] = [];
   status: TipStatus[] = [];
 
   // matchNo -> set av val, t.ex {'1','X'} för 1X
   myPicks = new Map<number, Set<Outcome>>();
 
-  constructor(private tips: TipsMockService) {}
+  constructor(private tips: TipsMockService,  private data: TipsDataService,) {}
 
-  ngOnInit() {
-    
-    combineLatest([
-      this.tips.getCurrentRoundMeta(),
-      this.tips.getMatches(),
-      this.tips.getMyPicks(),
-      this.tips.getStatus(),
-    ]).subscribe(([meta, matches, picks, status]) => {
-      this.roundNumber = meta.roundNumber;
-      this.maxPicks = meta.maxPicks;
-      this.matches = matches ?? [];
-      this.status = status ?? [];
+ngOnInit() {
+  combineLatest([
+    this.data.getMeta(),      // <-- REAL (Supabase)
+    this.data.getMatches(),   // <-- REAL (Supabase)
+    this.tips.getMyPicks(),   // <-- mock tills vidare
+    this.tips.getStatus(),    // <-- mock tills vidare
+  ]).subscribe(([meta, matches, picks, status]) => {
+    this.roundNumber = meta.roundNumber;
+    this.maxPicks = meta.maxPicks;
 
-      this.myPicks = new Map<number, Set<Outcome>>();
-      (picks ?? []).forEach((p: MyPick) => {
-        const set = this.parsePick(p.pick);
-        if (set.size > 0) this.myPicks.set(p.matchNo, set);
-      });
+    this.matches = matches ?? [];
+    this.status = status ?? [];
 
-      this.loading = false;
+    this.myPicks = new Map<number, Set<Outcome>>();
+    (picks ?? []).forEach((p: MyPick) => {
+      const set = this.parsePick(p.pick);
+      if (set.size > 0) this.myPicks.set(p.matchNo, set);
     });
-  }
+
+    this.loading = false;
+  });
+}
 
   // ---- Counters / rules ----
 
@@ -180,5 +181,13 @@ canSubmit(): boolean {
       return new Set(trimmed);
     }
     return set;
+  }
+
+  private getWeekNumber(date: Date): number {
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
   }
 }
