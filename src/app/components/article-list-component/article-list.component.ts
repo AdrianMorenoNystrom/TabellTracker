@@ -9,6 +9,7 @@ import { ApiService } from '../../services/api.service';
 import { Article } from '../../interfaces/article';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { AddArticleDialogComponent } from '../add-article-dialog/add-article-dialog.component';
+import { AuthService } from '../../services/auth.service';
 @Component({
   selector: 'app-articles-list',
   standalone: true,
@@ -32,6 +33,7 @@ export class ArticleListComponent implements OnInit {
 
   constructor(
     public api: ApiService,
+    public auth: AuthService,
     private router: Router,
       private dialog: MatDialog
   ) {}

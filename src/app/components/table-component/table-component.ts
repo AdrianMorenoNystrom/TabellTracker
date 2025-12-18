@@ -12,6 +12,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { PlayerHistoryDialogComponent } from '../player-history-dialog/player-history-dialog.component';
 import { DecimalPipe, NgIf, NgFor } from '@angular/common';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-table-component',
@@ -20,7 +21,7 @@ import { DecimalPipe, NgIf, NgFor } from '@angular/common';
   styleUrl: './table-component.scss'
 })
 export class TableComponent implements AfterViewInit {
-    constructor(public api: ApiService, private dialog: MatDialog) {}
+    constructor(public api: ApiService, private dialog: MatDialog,public auth: AuthService) {}
   players = new MatTableDataSource<Player>([]);
 displayedColumns = ['name', 'totalMatches', 'score', 'avgRound', 'actions'];
   @ViewChild(MatSort) sort!: MatSort;

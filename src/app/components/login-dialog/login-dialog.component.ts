@@ -6,6 +6,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { ApiService } from '../../services/api.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-login-dialog',
@@ -19,7 +20,7 @@ export class LoginDialogComponent {
   loading = false;
   error: string | null = null;
 
-  constructor(private fb: FormBuilder, private api: ApiService, private ref: MatDialogRef<LoginDialogComponent>) {
+  constructor(private fb: FormBuilder, private auth: AuthService, private ref: MatDialogRef<LoginDialogComponent>) {
     this.form = this.fb.group({
       username: ['', Validators.required],
       password: ['', Validators.required],
@@ -31,7 +32,7 @@ export class LoginDialogComponent {
     this.loading = true;
     this.error = null;
     const { username, password } = this.form.value;
-    this.api.login(username, password).subscribe({
+    this.auth.login(username, password).subscribe({
       next: () => {
         this.loading = false;
         this.ref.close({ loggedIn: true });

@@ -4,7 +4,7 @@
     <span class="spacer"></span>
 
     <button
-      *ngIf="api.isLoggedIn()"
+      *ngIf="auth.isLoggedIn$()"
       mat-stroked-button
       color="primary"
       (click)="newArticle()"
@@ -30,7 +30,7 @@
     </div>
 
     <button
-      *ngIf="api.isLoggedIn()"
+      *ngIf="auth.isLoggedIn$()"
       mat-icon-button
       color="warn"
       (click)="deleteArticle(a, $event)"
