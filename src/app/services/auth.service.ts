@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, from, map, Observable } from 'rxjs';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { environment } from '../../environments/environment';
-
+import { supabase } from './supabase.client';
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private supabase: SupabaseClient;
@@ -13,8 +13,7 @@ export class AuthService {
   private displayName$ = new BehaviorSubject<string | null>(null);
 
   constructor() {
-    this.supabase = createClient(environment.supabaseUrl, environment.supabaseAnonKey);
-
+    this.supabase = supabase;
     this.supabase.auth.getSession().then(({ data }) => {
       const user = data.session?.user ?? null;
       this.loggedIn$.next(!!user);
