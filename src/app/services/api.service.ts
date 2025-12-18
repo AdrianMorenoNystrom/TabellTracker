@@ -300,21 +300,17 @@ import { environment } from '../../environments/environment';
 import { Player } from '../interfaces/player';
 import { Round, RoundCreate } from '../interfaces/round';
 import { Article } from '../interfaces/article';
-
+import { supabase } from './supabase.client';
 @Injectable({ providedIn: 'root' })
 export class ApiService {
-  private supabase: SupabaseClient;
-
+    private supabase: SupabaseClient;
   private players$ = new BehaviorSubject<Player[]>([]);
   private rounds$ = new BehaviorSubject<Round[]>([]);
   private playersRealtimeInit = false;
   private roundsRealtimeInit = false;
 
   constructor() {
-    this.supabase = createClient(
-      environment.supabaseUrl,
-      environment.supabaseAnonKey
-    );
+        this.supabase = supabase;
   }
 
   // --------------------

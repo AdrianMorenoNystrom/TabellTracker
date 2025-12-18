@@ -27,31 +27,24 @@
         Krönikor
       </button> -->
 
-      <button
-        matMiniFab
-        color="secondary"
-        (click)="openLogin()"
-        *ngIf="!auth.isLoggedIn$()"
-      >
-        <mat-icon>login</mat-icon>
-      </button>
-      <!-- <button
-        matMiniFab
-        color="warn"
-        (click)="logout()"
-        *ngIf="api.isLoggedIn()"
-      >
-        <mat-icon>logout</mat-icon>
-      </button> -->
-            <button
-        matMiniFab
-        (click)="logout()"
-        *ngIf="auth.isLoggedIn$()"
-      >
-        <div class="avatar">
-          {{displayLetter}}
-        </div>
-      </button>
+<button
+  matMiniFab
+  color="secondary"
+  (click)="openLogin()"
+  *ngIf="!(isLoggedIn$ | async)"
+>
+  <mat-icon>login</mat-icon>
+</button>
+
+<button
+  matMiniFab
+  (click)="logout()"
+  *ngIf="(isLoggedIn$ | async)"
+>
+  <div class="avatar">
+    {{ displayLetter$ | async }}
+  </div>
+</button>
     </nav>
   </div>
   
