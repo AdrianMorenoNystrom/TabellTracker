@@ -10,6 +10,7 @@ import { AddRoundDialogComponent } from '../add-round-dialog/add-round-dialog.co
 import { RoundDetailsDialogComponent } from './round-details-dialog.component';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormField, MatLabel, MatSelect, MatSelectModule } from '@angular/material/select';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-roundlist-component',
@@ -21,7 +22,7 @@ export class RoundlistComponent {
   rounds: Round[] = [];
   sortMode: 'recent' | 'oldest' | 'score_desc' | 'score_asc' = 'recent';
 
-  constructor(public api: ApiService, private dialog: MatDialog) {}
+  constructor(public api: ApiService,public auth: AuthService, private dialog: MatDialog) {}
 
   ngOnInit() {
     this.api.watchRounds().subscribe((data) => {
