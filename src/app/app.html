@@ -31,20 +31,30 @@
         matMiniFab
         color="secondary"
         (click)="openLogin()"
-        *ngIf="!api.isLoggedIn()"
+        *ngIf="!auth.isLoggedIn$()"
       >
         <mat-icon>login</mat-icon>
       </button>
-      <button
+      <!-- <button
         matMiniFab
         color="warn"
         (click)="logout()"
         *ngIf="api.isLoggedIn()"
       >
         <mat-icon>logout</mat-icon>
+      </button> -->
+            <button
+        matMiniFab
+        (click)="logout()"
+        *ngIf="auth.isLoggedIn$()"
+      >
+        <div class="avatar">
+          {{displayLetter}}
+        </div>
       </button>
     </nav>
   </div>
+  
 </mat-toolbar>
 
 <router-outlet></router-outlet>

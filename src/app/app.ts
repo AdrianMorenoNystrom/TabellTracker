@@ -9,6 +9,8 @@ import { LoginDialogComponent } from './components/login-dialog/login-dialog.com
 import { ApiService } from './services/api.service';
 import { CommonModule } from '@angular/common';
 import { MatIcon } from '@angular/material/icon';
+import { avatarLetter } from './utils/avatar';
+import { AuthService } from './services/auth.service';
 
 @Component({
   selector: 'app-root',
@@ -18,7 +20,15 @@ import { MatIcon } from '@angular/material/icon';
 })
 export class App {
   protected readonly title = signal('tabelltracker');
-  constructor(private dialog: MatDialog, public api: ApiService) {}
+  constructor(private dialog: MatDialog, public auth: AuthService) {}
+
+  displayLetter: string ="?";
+
+ngOnInit() {
+  this.auth.getDisplayName$().subscribe(name => {
+    this.displayLetter = avatarLetter(name);
+  });
+}
 
   openLogin() {
     const ref = this.dialog.open(LoginDialogComponent, { width: '420px' });
@@ -26,6 +36,6 @@ export class App {
   }
 
   logout() {
-    this.api.logout();
+    this.auth.logout();
   }
 }
