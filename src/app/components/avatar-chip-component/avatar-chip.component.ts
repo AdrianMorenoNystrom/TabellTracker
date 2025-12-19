@@ -1,20 +1,22 @@
 import { Component, Input } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { avatarLetter } from '../../utils/avatar';
+import { avatarColorFromUserId } from '../../utils/avatar-color';
 
 @Component({
-  selector: 'app-avatar-chip',
   standalone: true,
-  imports: [CommonModule],
+  selector: 'app-avatar-chip',
   templateUrl: './avatar-chip.component.html',
   styleUrl: './avatar-chip.component.scss',
 })
 export class AvatarChipComponent {
   @Input() displayName: string | null = null;
+  @Input() userId: string | null = null;
 
   get letter(): string {
-    if (!this.displayName || this.displayName.trim().length === 0) {
-      return '?';
-    }
-    return this.displayName.trim().charAt(0).toUpperCase();
+    return avatarLetter(this.displayName);
+  }
+
+  get bgColor(): string {
+    return avatarColorFromUserId(this.userId);
   }
 }

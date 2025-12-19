@@ -25,7 +25,8 @@
                                     <div class="avatars" *ngIf="picksByMatch.get(m.matchNo)?.length">
               <app-avatar-chip
                 *ngFor="let p of picksByMatch.get(m.matchNo)!"
-                [displayName]="p.name">
+                [displayName]="p.name"
+                [userId]="p.userId">
               </app-avatar-chip>
             </div>
           </div>
