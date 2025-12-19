@@ -11,12 +11,12 @@ import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { PlayerHistoryDialogComponent } from '../player-history-dialog/player-history-dialog.component';
-import { DecimalPipe, NgIf, NgFor } from '@angular/common';
+import { DecimalPipe, NgIf, NgFor, AsyncPipe } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-table-component',
-  imports: [MatCardModule,MatButtonModule,MatIconModule, MatTableModule, MatSortModule, MatFormFieldModule, MatInputModule, MatDialogModule,NgIf,DecimalPipe,NgFor],
+  imports: [MatCardModule,MatButtonModule,MatIconModule, MatTableModule, MatSortModule, MatFormFieldModule, MatInputModule, MatDialogModule,NgIf,DecimalPipe,NgFor,AsyncPipe],
   templateUrl: './table-component.html',
   styleUrl: './table-component.scss'
 })
