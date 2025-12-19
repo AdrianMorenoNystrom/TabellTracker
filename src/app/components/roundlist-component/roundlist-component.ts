@@ -44,7 +44,7 @@ private updateVisibleRounds() {
   if (this.showAll) {
     this.visibleRounds = [...this.rounds];
   } else {
-    this.visibleRounds = this.rounds.slice(0, 5);
+    this.visibleRounds = this.rounds.slice(0, 3);
   }
 }
 

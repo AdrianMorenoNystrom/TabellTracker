@@ -15,6 +15,7 @@ import { avatarLetter } from './utils/avatar';
 
 import { Observable } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
+import {MatMenuModule} from '@angular/material/menu';
 
 @Component({
   selector: 'app-root',
@@ -30,6 +31,7 @@ import { map, startWith } from 'rxjs/operators';
     MatIcon,
     RouterLink,
     RouterLinkActive,
+    MatMenuModule
   ],
   templateUrl: './app.html',
   styleUrl: './app.scss',
