@@ -1,7 +1,6 @@
 ﻿<div class="header">
   <div class="title-group">
-    <h2>Stryktips 25/26</h2>
-    <p class="meta">Totalt antal omgångar: {{ rounds.length }}</p>
+    <h2 class="meta">Totalt antal omgångar: {{ rounds.length }}</h2>
   </div>
   <div class="controls">
     <button
@@ -9,7 +8,7 @@
       color="primary"
       class="add-round-button"
       (click)="openAddRoundDialog()"
-      *ngIf="auth.isLoggedIn$()"
+      *ngIf="auth.isLoggedIn$() | async"
     >
       Lägg till omgång
     </button>
@@ -30,7 +29,7 @@
   <p class="empty">Inga omgångar än. Lägg till den första för att börja.</p>
 } @else {
   <div class="rounds">
-    @for (r of rounds; track r.id) {
+    @for (r of visibleRounds; track r.id) {
       <mat-card appearance="outlined" class="round-card">
         <mat-card-header>
           <mat-card-title>Omgång {{ r.roundNumber }}</mat-card-title>
@@ -63,5 +62,10 @@
         </mat-card-actions>
       </mat-card>
     }
+    <div style="text-align:center; margin-top:1rem" *ngIf="rounds.length > 5">
+  <button mat-button [style]="'background-color:#00427A; color:#FFFF'" (click)="toggleShowAll()">
+    {{ showAll ? 'Visa senaste 5' : 'Visa alla omgångar' }}
+  </button>
+</div>
   </div>
 }

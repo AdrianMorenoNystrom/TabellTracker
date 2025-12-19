@@ -595,6 +595,7 @@ import { TipsDataService } from '../../services/tips-data.service';
 import { PicksService } from '../../services/pick.service';
 import { AuthService } from '../../services/auth.service';
 import { AvatarChipComponent } from '../avatar-chip-component/avatar-chip.component';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 type Outcome = '1' | 'X' | '2';
 
@@ -615,6 +616,7 @@ type PickBadge = {
     NgFor,
     MatDividerModule,
     AvatarChipComponent,
+    MatProgressSpinnerModule
   ],
   templateUrl: './match-component.component.html',
   styleUrl: './match-component.component.scss',
