@@ -1,6 +1,6 @@
 <h2 mat-dialog-title>Historik – {{ data.player.name }}</h2>
 <div mat-dialog-content>
-  <div *ngIf="loading">Laddar…</div>
+  <div *ngIf="loading"><mat-progress-spinner></mat-progress-spinner>></div>
   <table *ngIf="!loading" mat-table [dataSource]="entries" class="mat-elevation-z1" style="width:100%">
     <ng-container matColumnDef="round">
       <th mat-header-cell *matHeaderCellDef>Omgång</th>

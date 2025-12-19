@@ -6,6 +6,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { ApiService } from '../../services/api.service';
 import { Player } from '../../interfaces/player';
 import { Round } from '../../interfaces/round';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 interface Entry { roundNumber: number; week: number; score: number;  matchesPicked: number;
  }
@@ -13,7 +14,7 @@ interface Entry { roundNumber: number; week: number; score: number;  matchesPick
 @Component({
   selector: 'app-player-history-dialog',
   standalone: true,
-  imports: [CommonModule, MatDialogModule, MatTableModule, MatButtonModule],
+  imports: [CommonModule, MatDialogModule, MatTableModule, MatButtonModule,MatProgressSpinnerModule],
   templateUrl: './player-history-dialog.component.html',
   styleUrl: './player-history-dialog.component.scss'
 })

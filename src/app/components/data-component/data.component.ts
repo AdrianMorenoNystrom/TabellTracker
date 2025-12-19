@@ -7,6 +7,7 @@ import { ApiService } from '../../services/api.service';
 import { Player } from '../../interfaces/player';
 import { Round } from '../../interfaces/round';
 import { TotalScoreDataComponent } from "../total-score-data/total-score-data.component";
+import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 
 interface PlayerStatsCard {
   player: Player;
@@ -30,7 +31,7 @@ interface FourPickerInfo {
 @Component({
   selector: 'app-data',
   standalone: true,
-  imports: [CommonModule, MatCardModule, MatListModule, MatDividerModule, TotalScoreDataComponent],
+  imports: [CommonModule, MatCardModule, MatListModule, MatDividerModule, TotalScoreDataComponent,MatProgressSpinnerModule],
   templateUrl: './data.component.html',
   styleUrl: './data.component.scss'
 })

@@ -1,4 +1,7 @@
-<mat-card class="tip-card" appearance="outlined" *ngIf="!loading; else skel">
+<div *ngIf="loading" class="loading-wrapper">
+  <mat-spinner></mat-spinner>
+</div>
+<mat-card class="tip-card" appearance="outlined" *ngIf="!loading;">
   <mat-card-header class="header">
     <mat-card-title class="title">Stryktipset – Vecka {{ thisWeek }}</mat-card-title>
   </mat-card-header>

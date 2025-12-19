@@ -24,12 +24,29 @@ export class RoundlistComponent {
 
   constructor(public api: ApiService,public auth: AuthService, private dialog: MatDialog) {}
 
-  ngOnInit() {
-    this.api.watchRounds().subscribe((data) => {
-      this.rounds = data ?? [];
-      this.applySort();
-    });
+showAll = false;
+visibleRounds: Round[] = [];
+
+ngOnInit() {
+  this.api.watchRounds().subscribe((data) => {
+    this.rounds = data ?? [];
+    this.applySort();
+    this.updateVisibleRounds();
+  });
+}
+
+toggleShowAll() {
+  this.showAll = !this.showAll;
+  this.updateVisibleRounds();
+}
+
+private updateVisibleRounds() {
+  if (this.showAll) {
+    this.visibleRounds = [...this.rounds];
+  } else {
+    this.visibleRounds = this.rounds.slice(0, 5);
   }
+}
 
 onSortChange(mode: string): void {
   if (mode === 'recent') {
@@ -104,19 +121,17 @@ onSortChange(mode: string): void {
     this.applySort();
   }
 
-  private applySort() {
-    if (this.sortMode === 'recent') {
-      this.rounds = [...this.rounds].sort((a, b) => b.roundNumber - a.roundNumber);
-      return;
-    }
-  if (this.sortMode === 'oldest') {
+private applySort() {
+  if (this.sortMode === 'recent') {
+    this.rounds = [...this.rounds].sort((a, b) => b.roundNumber - a.roundNumber);
+  } else if (this.sortMode === 'oldest') {
     this.rounds = [...this.rounds].sort((a, b) => a.roundNumber - b.roundNumber);
-    return;
-  }
-    if (this.sortMode === 'score_desc') {
-      this.rounds = [...this.rounds].sort((a, b) => (b.totalScore - a.totalScore) || (b.id - a.id));
-      return;
-    }
+  } else if (this.sortMode === 'score_desc') {
+    this.rounds = [...this.rounds].sort((a, b) => (b.totalScore - a.totalScore) || (b.id - a.id));
+  } else {
     this.rounds = [...this.rounds].sort((a, b) => (a.totalScore - b.totalScore) || (b.id - a.id));
   }
+
+  this.updateVisibleRounds();
+}
 }

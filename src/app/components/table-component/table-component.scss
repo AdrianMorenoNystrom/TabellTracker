@@ -53,8 +53,8 @@
   }
 
   .mobile-player-card {
-    border-radius: 12px;
     padding: 10px 12px;
+      border-left: 5px solid #00427A;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     background: #fff;
     cursor: pointer;
@@ -66,10 +66,8 @@
     box-shadow: 0 4px 8px rgba(0,0,0,0.12);
   }
 
-  .leader-card {
-    border: 1px solid rgba(99, 253, 1, 0.8);
-    background: rgba(99, 253, 1, 0.08);
-  }
+  .leader-card{
+box-shadow: inset 0 0px 20px 4px #fff, inset 0 4px 5px 0px #008912;  }
 
   .mobile-card-header {
     display: flex;
