@@ -1,6 +1,6 @@
 import { Component, Input } from '@angular/core';
 import { avatarLetter } from '../../utils/avatar';
-import { avatarColorFromUserId } from '../../utils/avatar-color';
+import { avatarColor } from '../../utils/avatar-color';
 
 @Component({
   standalone: true,
@@ -17,6 +17,6 @@ export class AvatarChipComponent {
   }
 
   get bgColor(): string {
-    return avatarColorFromUserId(this.userId);
+    return avatarColor(this.displayName);
   }
 }

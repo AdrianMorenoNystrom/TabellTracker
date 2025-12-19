@@ -5,18 +5,19 @@ const AVATAR_COLORS = [
   '#FF0054',
 ];
 
-function hashStringToIndex(str: string, modulo: number): number {
+function hashString(input: string): number {
   let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = (hash << 5) - hash + str.charCodeAt(i);
-    hash |= 0;
+  for (let i = 0; i < input.length; i++) {
+    hash = (hash << 5) - hash + input.charCodeAt(i);
+    hash |= 0; // gör till 32-bit int
   }
-  return Math.abs(hash) % modulo;
+  return Math.abs(hash);
 }
 
-export function avatarColorFromUserId(userId: string | null): string {
-  if (!userId) return '#9ca3af';
-  return AVATAR_COLORS[
-    hashStringToIndex(userId, AVATAR_COLORS.length)
-  ];
+export function avatarColor(displayName: string | null): string {
+  if (!displayName) return '#9CA3AF'; // fallback grå
+
+  const hash = hashString(displayName.toLowerCase());
+  const index = hash % AVATAR_COLORS.length;
+  return AVATAR_COLORS[index];
 }
