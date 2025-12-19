@@ -8,7 +8,7 @@
       color="primary"
       class="add-round-button"
       (click)="openAddRoundDialog()"
-      *ngIf="auth.isLoggedIn$() | async"
+      *ngIf="auth.isUserAdmin$() | async"
     >
       Lägg till omgång
     </button>
@@ -54,7 +54,7 @@
             color="warn"
             type="button"
             (click)="deleteRound(r.id)"
-            *ngIf="auth.isLoggedIn$()"
+            *ngIf="auth.isUserAdmin$() | async"
             aria-label="Ta bort omgång"
           >
             <mat-icon>delete</mat-icon>

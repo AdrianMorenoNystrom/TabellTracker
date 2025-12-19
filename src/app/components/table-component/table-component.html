@@ -46,7 +46,7 @@
         <th mat-header-cell *matHeaderCellDef></th>
         <td mat-cell *matCellDef="let p" class="actions-cell">
           <button
-            *ngIf="auth.isLoggedIn$()"
+            *ngIf="auth.isUserAdmin$() | async"
             mat-icon-button
             color="warn"
             (click)="$event.stopPropagation(); delete(p)"
@@ -90,7 +90,7 @@
             <span class="name">{{ p.name }}</span>
           </div>
           <button
-            *ngIf="auth.isLoggedIn$()"
+                        *ngIf="auth.isUserAdmin$() | async"
             mat-icon-button
             color="warn"
             (click)="$event.stopPropagation(); delete(p)"

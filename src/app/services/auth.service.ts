@@ -3,12 +3,17 @@ import { BehaviorSubject, from, map, Observable } from 'rxjs';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { supabase } from './supabase.client';
 
+type ProfileRow = {
+  display_name: string | null;
+  role: 'user' | 'admin' | null;
+};
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private supabase: SupabaseClient;
 
   private ready$ = new BehaviorSubject<boolean>(false);
-
+  private isAdmin$ = new BehaviorSubject<boolean>(false);
   private loggedIn$ = new BehaviorSubject<boolean>(false);
   private userId$ = new BehaviorSubject<string | null>(null);
   private displayName$ = new BehaviorSubject<string | null>(null);
@@ -16,62 +21,52 @@ export class AuthService {
   constructor() {
     this.supabase = supabase;
 
+    // 1) Initial session
     this.supabase.auth.getSession().then(({ data }) => {
       const user = data.session?.user ?? null;
-
-      this.loggedIn$.next(!!user);
-      this.userId$.next(user?.id ?? null);
-
-      if (user) this.loadDisplayNameForUser(user.id);
-      else this.displayName$.next(null);
-
-      // ✅ markera att vi nu vet auth-läget
-      this.ready$.next(true);
+      this.applyUser(user).finally(() => this.ready$.next(true));
     });
 
+    // 2) Auth changes
     this.supabase.auth.onAuthStateChange((_event, session) => {
       const user = session?.user ?? null;
-
-      this.loggedIn$.next(!!user);
-      this.userId$.next(user?.id ?? null);
-
-      if (user) this.loadDisplayNameForUser(user.id);
-      else this.displayName$.next(null);
+      // vi vet auth-läget efter första event också
+      this.applyUser(user).finally(() => this.ready$.next(true));
     });
   }
 
-  // --- Ready ---
+  // --- Public streams ---
   isReady$(): Observable<boolean> {
     return this.ready$.asObservable();
   }
-
   isReadySnapshot(): boolean {
     return this.ready$.value;
   }
 
-  // --- Logged in ---
+  isUserAdmin$(): Observable<boolean> {
+    return this.isAdmin$.asObservable();
+  }
+  isUserAdminSnapshot(): boolean {
+    return this.isAdmin$.value;
+  }
+
   isLoggedIn$(): Observable<boolean> {
     return this.loggedIn$.asObservable();
   }
-
   isLoggedInSnapshot(): boolean {
     return this.loggedIn$.value;
   }
 
-  // --- User id ---
   getUserId$(): Observable<string | null> {
     return this.userId$.asObservable();
   }
-
   getUserIdSnapshot(): string | null {
     return this.userId$.value;
   }
 
-  // --- Display name ---
   getDisplayName$(): Observable<string | null> {
     return this.displayName$.asObservable();
   }
-
   getDisplayNameSnapshot(): string | null {
     return this.displayName$.value;
   }
@@ -90,23 +85,32 @@ export class AuthService {
     return this.supabase.auth.signOut().then(() => {});
   }
 
-  // --- Profile ---
-  private loadDisplayNameForUser(uid: string) {
-    from(
-      this.supabase
-        .from('profiles')
-        .select('display_name')
-        .eq('id', uid)
-        .maybeSingle()
-    ).subscribe({
-      next: ({ data, error }) => {
-        if (error) {
-          console.error('Failed to load display name', error);
-          this.displayName$.next(null);
-          return;
-        }
-        this.displayName$.next(data?.display_name ?? null);
-      },
-    });
+  // --- Internal: set state from user ---
+  private async applyUser(user: { id: string } | null): Promise<void> {
+    this.loggedIn$.next(!!user);
+    this.userId$.next(user?.id ?? null);
+
+    if (!user) {
+      this.displayName$.next(null);
+      this.isAdmin$.next(false);
+      return;
+    }
+
+    // Läs både display_name och role i ett svep
+    const { data, error } = await this.supabase
+      .from('profiles')
+      .select('display_name, role')
+      .eq('id', user.id)
+      .maybeSingle<ProfileRow>();
+
+    if (error) {
+      console.error('Failed to load profile', error);
+      this.displayName$.next(null);
+      this.isAdmin$.next(false);
+      return;
+    }
+
+    this.displayName$.next(data?.display_name ?? null);
+    this.isAdmin$.next((data?.role ?? 'user') === 'admin');
   }
 }
