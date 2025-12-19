@@ -38,16 +38,21 @@
 >
   <mat-icon >login</mat-icon>
 </button>
-
 <button
   matMiniFab
-  (click)="logout()"
+   [matMenuTriggerFor]="menu"
   *ngIf="(isLoggedIn$ | async)"
 >
   <div class="avatar">
     {{ displayLetter$ | async }}
   </div>
+  <mat-menu #menu="matMenu">
+  <button mat-menu-item   (click)="logout()" [routerLink]="'/'"
+ >    <mat-icon>logout</mat-icon>
+    <span>Logga ut</span></button>
+</mat-menu>
 </button>
+
     </nav>
   </div>
   
