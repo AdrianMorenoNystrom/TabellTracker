@@ -10,10 +10,8 @@ export const supabase = createClient(
       persistSession: true,
       autoRefreshToken: true,
 
-      // 👇 VIKTIGT: unik key så dev/prod/projekt inte krockar
       storageKey: 'sb-stryktipstabellen-auth',
 
-      // browser
       storage: typeof window !== 'undefined'
         ? window.localStorage
         : undefined,

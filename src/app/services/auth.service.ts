@@ -1,29 +1,37 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, from, map, Observable } from 'rxjs';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { environment } from '../../environments/environment';
+import { SupabaseClient } from '@supabase/supabase-js';
 import { supabase } from './supabase.client';
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private supabase: SupabaseClient;
 
+  private ready$ = new BehaviorSubject<boolean>(false);
+
   private loggedIn$ = new BehaviorSubject<boolean>(false);
   private userId$ = new BehaviorSubject<string | null>(null);
-
   private displayName$ = new BehaviorSubject<string | null>(null);
 
   constructor() {
     this.supabase = supabase;
+
     this.supabase.auth.getSession().then(({ data }) => {
       const user = data.session?.user ?? null;
+
       this.loggedIn$.next(!!user);
       this.userId$.next(user?.id ?? null);
 
       if (user) this.loadDisplayNameForUser(user.id);
+      else this.displayName$.next(null);
+
+      // ✅ markera att vi nu vet auth-läget
+      this.ready$.next(true);
     });
 
     this.supabase.auth.onAuthStateChange((_event, session) => {
       const user = session?.user ?? null;
+
       this.loggedIn$.next(!!user);
       this.userId$.next(user?.id ?? null);
 
@@ -32,7 +40,16 @@ export class AuthService {
     });
   }
 
+  // --- Ready ---
+  isReady$(): Observable<boolean> {
+    return this.ready$.asObservable();
+  }
 
+  isReadySnapshot(): boolean {
+    return this.ready$.value;
+  }
+
+  // --- Logged in ---
   isLoggedIn$(): Observable<boolean> {
     return this.loggedIn$.asObservable();
   }
@@ -41,6 +58,7 @@ export class AuthService {
     return this.loggedIn$.value;
   }
 
+  // --- User id ---
   getUserId$(): Observable<string | null> {
     return this.userId$.asObservable();
   }
@@ -49,6 +67,7 @@ export class AuthService {
     return this.userId$.value;
   }
 
+  // --- Display name ---
   getDisplayName$(): Observable<string | null> {
     return this.displayName$.asObservable();
   }

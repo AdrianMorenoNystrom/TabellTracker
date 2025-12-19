@@ -1,0 +1,181 @@
+:host {
+  display: block;
+}
+
+.tip-card { 
+    border-radius: 0px; 
+    display: flex;
+    flex-direction: column;
+    color:#001932;
+    background-color: #FFECEB;
+}
+
+
+.header{
+  display: flex;
+  justify-content: center;
+}
+
+.title{
+    font-family: 'Phudu', sans-serif;
+  font-weight: 800;
+  font-size: 2rem;
+}
+
+.status-row { 
+    margin-bottom: 12px; 
+}
+
+
+mat-chip.ok { opacity: 1; }
+mat-chip.no { opacity: .55; }
+
+.matches { 
+    display: flex;
+    flex-direction: column; 
+    gap: 0.5rem; 
+}
+
+.match {
+  border-left: 5px solid #00427A;
+  border-bottom: 1px solid rgba(0,0,0,0.12);
+  border-top: 1px solid rgba(0,0,0,0.12);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.match:nth-child(odd) {
+  background-color: #FFFFFF;
+}
+
+.match:nth-child(even) {
+  background-color: #F7F9FB;
+}
+
+.main{
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.match-info {
+display: flex;
+flex-direction: row;
+padding: 0.5rem;
+}
+
+.teams{
+    display: flex;
+    gap: 0.2rem;
+    align-items: center;
+    justify-content: center;
+}
+.pick.picked-by-other {
+  opacity: 1;
+  background: rgba(rgb(0, 66, 122), 0.3);
+  border-color: rgba(rgb(0, 66, 122), 0.35);
+  color:rgba(0,0,0,0.7)
+}
+
+.pick:disabled {
+  opacity: 1;
+  cursor: not-allowed;
+  filter: grayscale(1);
+}
+
+.no { 
+  font-weight: 700;
+   opacity: .8; 
+   gap: 0.5rem;
+   margin-bottom: 0.2rem;
+  display: flex;
+  padding:0.3rem;
+  align-items: center;
+  width: fit-content;
+  }
+
+  .teams {
+  font-weight: 600;
+}
+
+.pick-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  align-items: center;
+}
+
+.game{
+  display: flex;
+  flex-direction: column;
+}
+
+.percent{
+  justify-content: center;
+  display: flex;
+  margin: 1rem;
+}
+
+.odds{
+  justify-content: center;
+  display: flex;
+  margin-top: 0.5rem;
+}
+
+.pick {
+  height: 42px;
+  border: 1px solid #7D7D80;
+  cursor: pointer;
+  background: transparent;
+  font-weight: 800;
+  font-size: 1rem;
+}
+
+.pick.active {
+  background: rgba(0, 66, 122, 1);
+  color: white;
+}
+
+.clear {
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid rgba(0,0,0,.12);
+  background: rgba(0,0,0,.04);
+}
+
+.submit-row {
+  margin-top: 16px;
+  text-align: center;
+  padding: 1rem;
+}
+
+.submit{
+    background-color: rgba(0, 66, 122, 1);
+    color: white;
+    font-size: 1.7rem;
+    height: 3rem;
+    width: 15rem;
+    font-weight: 400;
+}
+
+.submit:disabled {
+  background-color: rgba(200, 200, 200, 1);
+  color: rgb(0, 0, 0,0.5);
+}
+
+@media (min-width: 600px) {
+  :host{
+    max-width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+
+  .tip-card {
+    width: 600px;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    background-color: #Ffff;
+  }
+}
