@@ -7,7 +7,9 @@
     display: flex;
     flex-direction: column;
     color:#001932;
+    background-color: #FFECEB;
 }
+
 
 .header{
   display: flex;
@@ -42,6 +44,10 @@ mat-chip.no { opacity: .55; }
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
+}
+
+.match:nth-child(odd) {
+  background-color: #FFFFFF;
 }
 
 .match:nth-child(even) {
@@ -170,5 +176,6 @@ padding: 0.5rem;
     width: 600px;
     margin-top: 1rem;
     margin-bottom: 1rem;
+    background-color: #Ffff;
   }
 }
