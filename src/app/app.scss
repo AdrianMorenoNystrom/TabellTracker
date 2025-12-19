@@ -1,7 +1,7 @@
 ﻿.navbar {
   background-color: var(--primary-color);
   color: whitesmoke;
-  padding: 0 1.5rem;
+  padding: 0 2rem;
 }
 
 .toolbar-content {
@@ -14,8 +14,9 @@
 
 .brand {
   margin: 0;
-  font-size: 1.5rem;
-  font-weight: 600;
+  font-size: 2rem;
+    font-family: 'Phudu', sans-serif;
+  font-weight: 800;
 }
 
 .actions {

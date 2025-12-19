@@ -1,6 +1,6 @@
 <mat-card class="tip-card" appearance="outlined" *ngIf="!loading; else skel">
-  <mat-card-header>
-    <mat-card-title>Stryktipset – Vecka {{ thisWeek }}</mat-card-title>
+  <mat-card-header class="header">
+    <mat-card-title class="title">Stryktipset – Vecka {{ thisWeek }}</mat-card-title>
   </mat-card-header>
 
   <mat-card-content class="content">
@@ -15,81 +15,79 @@
     <div class="matches">
       <div class="match" *ngFor="let m of matches">
         <div class="match-info">
-          <div class="no">#{{ m.matchNo }}</div>
 
-          <!-- Högerkolumnen: lag + meta -->
           <div class="main">
+                      <div class="no" [class.picked-by-other]="(isTakenOutcome(m.matchNo,'1') || isTakenOutcome(m.matchNo,'X') || isTakenOutcome(m.matchNo,'2'))  ">
+            #{{ m.matchNo }}
+                                    <div class="avatars" *ngIf="picksByMatch.get(m.matchNo)?.length">
+              <app-avatar-chip
+                *ngFor="let p of picksByMatch.get(m.matchNo)!"
+                [displayName]="p.name">
+              </app-avatar-chip>
+            </div>
+          </div>
+
             <div class="teams">
               <div class="home">{{ m.home }}</div>
               <div class="vs">–</div>
               <div class="away">{{ m.away }}</div>
             </div>
-
-            <!-- EXTRA INFO -->
-
           </div>
         </div>
 
         <div class="pick-row">
           <div class="game">
-          <button
-            class="pick"
-            [class.active]="isActive(m.matchNo,'1')"
-            [disabled]="isDisabled(m.matchNo,'1')"
-            (click)="toggleOutcome(m.matchNo,'1')"
-          >1</button>
-          <div class="percent">
-          {{ m.percent?.['1'] }}%
-          </div>
-                    <mat-divider></mat-divider>
-                    <div class="odds">
-            {{ m.odds?.['1'] }}
-          </div>
-          </div>
-
-
-          <div class="game">
-                      <button
-            class="pick"
-            [class.active]="isActive(m.matchNo,'X')"
-            [disabled]="isDisabled(m.matchNo,'X')"
-            (click)="toggleOutcome(m.matchNo,'X')"
-          >X</button>
-          <div class="percent">
-          {{ m.percent?.['X'] }}%
-          </div>
-                              <mat-divider></mat-divider>
-                    <div class="odds">
-            {{ m.odds?.['X'] }}
-          </div>
+            <button
+              class="pick"
+              [class.active]="isActive(m.matchNo,'1')"
+              [class.picked-by-other]="!isActive(m.matchNo,'1') && isTakenOutcome(m.matchNo,'1')"
+              [disabled]="isDisabled(m.matchNo,'1')"
+              (click)="toggleOutcome(m.matchNo,'1')"
+            >1</button>
+            <div class="percent">{{ m.percent?.['1'] }}%</div>
+            <mat-divider></mat-divider>
+            <div class="odds">{{ m.odds?.['1'] }}</div>
           </div>
 
           <div class="game">
-                      <button
-            class="pick"
-            [class.active]="isActive(m.matchNo,'2')"
-            [disabled]="isDisabled(m.matchNo,'2')"
-            (click)="toggleOutcome(m.matchNo,'2')"
-          >2</button>
-          <div class="percent">
-          {{ m.percent?.['2']}}%
-          </div>
-                              <mat-divider></mat-divider>
-          <div class="odds">
-            {{ m.odds?.['2'] }}
-          </div>
+            <button
+              class="pick"
+              [class.active]="isActive(m.matchNo,'X')"
+              [class.picked-by-other]="!isActive(m.matchNo,'X') && isTakenOutcome(m.matchNo,'X')"
+              [disabled]="isDisabled(m.matchNo,'X')"
+              (click)="toggleOutcome(m.matchNo,'X')"
+            >X</button>
+            <div class="percent">{{ m.percent?.['X'] }}%</div>
+            <mat-divider></mat-divider>
+            <div class="odds">{{ m.odds?.['X'] }}</div>
           </div>
 
+          <div class="game">
+            <button
+              class="pick"
+              [class.active]="isActive(m.matchNo,'2')"
+              [class.picked-by-other]="!isActive(m.matchNo,'2') && isTakenOutcome(m.matchNo,'2')"
+              [disabled]="isDisabled(m.matchNo,'2')"
+              (click)="toggleOutcome(m.matchNo,'2')"
+            >2</button>
+            <div class="percent">{{ m.percent?.['2'] }}%</div>
+            <mat-divider></mat-divider>
+            <div class="odds">{{ m.odds?.['2'] }}</div>
+          </div>
         </div>
-
       </div>
-      
     </div>
 
     <div class="submit-row">
-      <button mat-raised-button class="submit" [class.ready]="canSubmit()" [disabled]="!canSubmit()">
-        Lås in rad
+      <button mat-raised-button
+              class="submit"
+              [class.ready]="canSubmit()"
+              [disabled]="!canSubmit() || saving"
+              (click)="lockInRow()">
+        {{ saving ? 'Sparar…' : 'Lås in rad' }}
       </button>
+
+      <div class="error" *ngIf="saveError">{{ saveError }}</div>
     </div>
   </mat-card-content>
 </mat-card>

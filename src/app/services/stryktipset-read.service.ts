@@ -1,21 +1,21 @@
-// src/app/services/stryktipset-read.service.ts
 import { Injectable } from '@angular/core';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { from, map, Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { switchMap } from 'rxjs/operators'; 
+import { supabase } from './supabase.client';
 
 @Injectable({ providedIn: 'root' })
 export class StryktipsetReadService {
-  private sb: SupabaseClient;
+  private supabase: SupabaseClient;
 
   constructor() {
-    this.sb = createClient(environment.supabaseUrl, environment.supabaseAnonKey);
+    this.supabase = supabase;
   }
 
 getLatest(): Observable<{ draw: any; events: any[] }> {
   return from(
-    this.sb
+    this.supabase
       .from('stryktipset_draws')
       .select('*')
       .order('draw_number', { ascending: false })
@@ -27,7 +27,7 @@ getLatest(): Observable<{ draw: any; events: any[] }> {
       if (!draw) throw new Error('No draw found');
 
       return from(
-        this.sb
+        this.supabase
           .from('stryktipset_draw_events')
           .select('*')
           .eq('draw_number', draw.draw_number)
@@ -43,7 +43,7 @@ getLatest(): Observable<{ draw: any; events: any[] }> {
 }
 
   async getLatestAsync() {
-    const { data: draw, error } = await this.sb
+    const { data: draw, error } = await this.supabase
       .from('stryktipset_draws')
       .select('*')
       .order('draw_number', { ascending: false })
@@ -53,7 +53,7 @@ getLatest(): Observable<{ draw: any; events: any[] }> {
     if (error) throw error;
     if (!draw) throw new Error('No draw found');
 
-    const { data: events, error: evErr } = await this.sb
+    const { data: events, error: evErr } = await this.supabase
       .from('stryktipset_draw_events')
       .select('*')
       .eq('draw_number', draw.draw_number)

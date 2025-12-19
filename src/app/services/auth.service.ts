@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, from, map, Observable } from 'rxjs';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { environment } from '../../environments/environment';
+import {  SupabaseClient } from '@supabase/supabase-js';
 import { supabase } from './supabase.client';
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -57,7 +56,6 @@ export class AuthService {
     return this.displayName$.value;
   }
 
-  // --- Auth actions ---
   login(email: string, password: string): Observable<{ token: string }> {
     return from(this.supabase.auth.signInWithPassword({ email, password })).pipe(
       map(({ data, error }) => {
@@ -71,7 +69,6 @@ export class AuthService {
     return this.supabase.auth.signOut().then(() => {});
   }
 
-  // --- Profile ---
   private loadDisplayNameForUser(uid: string) {
     from(
       this.supabase
