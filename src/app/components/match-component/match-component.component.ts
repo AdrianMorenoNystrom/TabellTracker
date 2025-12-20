@@ -619,7 +619,6 @@ type PickBadge = {
     MatDividerModule,
     AvatarChipComponent,
     MatProgressSpinnerModule,
-    SnapshotDialogComponent,
   ],
   templateUrl: './match-component.component.html',
   styleUrl: './match-component.component.scss',
@@ -733,6 +732,7 @@ export class MatchComponentComponent {
     matches: this.matches,
     myPicks: myPicksObj,
     picksByMatch: picksByMatchObj,
+    myUserId: this.userId!,
   };
 
   this.dialog.open(SnapshotDialogComponent, {

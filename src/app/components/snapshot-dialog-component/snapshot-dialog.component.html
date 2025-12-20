@@ -13,16 +13,28 @@
 
       <div class="mini-1x2" [class.locked]="isLockedMatch(m.matchNo)">
         <div class="cell"
-             [class.mine]="isMine(m.matchNo,'1')"
-             [class.other]="!isMine(m.matchNo,'1') && isTakenByOther(m.matchNo,'1')">1</div>
+     [class.mine]="isMine(m.matchNo,'1')"
+     [class.other]="!isMine(m.matchNo,'1') && isTakenByOther(m.matchNo,'1')"
+     [style.background]="otherBg(m.matchNo,'1')"
+     [style.borderColor]="otherBorder(m.matchNo,'1')">
+  1
+</div>
 
         <div class="cell"
-             [class.mine]="isMine(m.matchNo,'X')"
-             [class.other]="!isMine(m.matchNo,'X') && isTakenByOther(m.matchNo,'X')">X</div>
+     [class.mine]="isMine(m.matchNo,'X')"
+     [class.other]="!isMine(m.matchNo,'X') && isTakenByOther(m.matchNo,'X')"
+     [style.background]="otherBg(m.matchNo,'X')"
+     [style.borderColor]="otherBorder(m.matchNo,'X')">
+  X
+</div>
 
         <div class="cell"
-             [class.mine]="isMine(m.matchNo,'2')"
-             [class.other]="!isMine(m.matchNo,'2') && isTakenByOther(m.matchNo,'2')">2</div>
+     [class.mine]="isMine(m.matchNo,'2')"
+     [class.other]="!isMine(m.matchNo,'2') && isTakenByOther(m.matchNo,'2')"
+     [style.background]="otherBg(m.matchNo,'2')"
+     [style.borderColor]="otherBorder(m.matchNo,'2')">
+  2
+</div>
       </div>
     </div>
     <mat-divider></mat-divider>
