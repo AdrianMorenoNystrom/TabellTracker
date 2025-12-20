@@ -155,7 +155,7 @@ padding: 0.5rem;
 }
 
 .submit-row {
-  margin-top: 16px;
+  margin-top: 2px;
   text-align: center;
   padding: 1rem;
 }
@@ -186,5 +186,49 @@ padding: 0.5rem;
     margin-top: 1rem;
     margin-bottom: 1rem;
     background-color: #Ffff;
+  }
+}
+
+/* Ge utrymme så sticky bar inte täcker sista matchen */
+.tip-card {
+  padding-bottom: 3rem;
+}
+
+/* Sticky snapshot bar */
+.sticky-snapshot {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+
+  display: flex;
+  justify-content: center;
+
+  padding: 12px 16px;
+
+  background: rgba(255, 236, 235, 0.92);
+  backdrop-filter: blur(8px);
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+/* Knappen */
+.sticky-snapshot .snapshot-button {
+  height: 44px;
+  font-weight: 700;
+  width: min(92vw, 420px);
+  background-color: white;
+}
+
+/* Desktop: lite luftigare, mindre "mobile-feel" */
+@media (min-width: 768px) {
+  .sticky-snapshot {
+    padding: 10px 24px;
+    background: rgba(255, 255, 255, 0.85);
+    width: 100%;
+  }
+
+  .sticky-snapshot .snapshot-button {
+    width: 320px;
   }
 }

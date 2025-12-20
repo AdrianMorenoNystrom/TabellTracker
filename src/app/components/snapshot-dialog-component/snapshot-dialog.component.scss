@@ -1,0 +1,106 @@
+.wrap {
+  width: min(600px, 98vw);
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 10px;
+  h3 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+  }
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 70vh;
+  overflow: auto;
+  margin:0.3rem;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  border-radius: 12px;
+  background: white;
+    padding: 0.1rem;
+}
+
+.left {
+  min-width: 0;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.no {
+  width: 32px;
+  font-weight: 800;
+  opacity: 0.7;
+}
+
+.teams {
+  min-width: 0;
+  display: flex;
+  gap: 2px;
+  align-items: center;
+  font-weight: 650;
+
+  .home, .away {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 140px;
+  }
+
+  .vs { opacity: 0.5; }
+}
+
+.mini-1x2 {
+  display: grid;
+  grid-template-columns: repeat(3, 28px);
+  gap: 6px;
+  &.locked .cell {
+    opacity: 0.75;
+  }
+}
+
+.cell {
+  height: 26px;
+  display: grid;
+  place-items: center;
+  font-weight: 900;
+  border: 1px solid rgba(0,0,0,0.25);
+  font-size: 0.9rem;
+  background: transparent;
+
+  &.mine {
+    background: #00427A; // din "vald"
+    color: white;
+    border-color: transparent;
+  }
+
+  &.other {
+    background: rgba(14,165,233,0.3); // "tagen av annan"
+    border-color: rgba(14,165,233,0.35);
+  }
+}
+
+.close-button{
+    margin-top:0.2rem;
+    background-color: #F44336;
+    align-self: center;
+    color: white;
+}

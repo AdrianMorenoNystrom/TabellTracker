@@ -596,6 +596,8 @@ import { PicksService } from '../../services/pick.service';
 import { AuthService } from '../../services/auth.service';
 import { AvatarChipComponent } from '../avatar-chip-component/avatar-chip.component';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatDialog } from '@angular/material/dialog';
+import { SnapshotDialogComponent,SnapshotDialogData } from '../snapshot-dialog-component/snapshot-dialog.component';
 
 type Outcome = '1' | 'X' | '2';
 
@@ -616,7 +618,8 @@ type PickBadge = {
     NgFor,
     MatDividerModule,
     AvatarChipComponent,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    SnapshotDialogComponent,
   ],
   templateUrl: './match-component.component.html',
   styleUrl: './match-component.component.scss',
@@ -649,7 +652,8 @@ export class MatchComponentComponent {
     private data: TipsDataService,
     private picks: PicksService,
     private auth: AuthService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private dialog: MatDialog,
   ) {}
 
   ngOnInit() {
@@ -713,6 +717,29 @@ export class MatchComponentComponent {
       });
   }
 
+
+  openSnapshot() {
+  const myPicksObj: Record<number, Pick> = {};
+  this.myPicks.forEach((set, matchNo) => {
+    myPicksObj[matchNo] = this.serializePick(set);
+  });
+
+  const picksByMatchObj: Record<number, any[]> = {};
+  this.picksByMatch.forEach((list, matchNo) => {
+    picksByMatchObj[matchNo] = list;
+  });
+
+  const payload: SnapshotDialogData = {
+    matches: this.matches,
+    myPicks: myPicksObj,
+    picksByMatch: picksByMatchObj,
+  };
+
+  this.dialog.open(SnapshotDialogComponent, {
+    data: payload,
+    maxWidth: '100vw',
+  });
+}
   // -------------------------
   // NEW: “taken pick” helpers
   // -------------------------
