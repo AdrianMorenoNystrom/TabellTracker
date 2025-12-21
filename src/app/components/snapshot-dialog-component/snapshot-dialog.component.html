@@ -1,0 +1,43 @@
+<div class="wrap">
+
+  <div class="list">
+    <div class="row" *ngFor="let m of data.matches">
+      <div class="left">
+        <div class="no">#{{ m.matchNo }}</div>
+        <div class="teams">
+          <span class="home">{{ m.home }}</span>
+          <span class="vs">–</span>
+          <span class="away">{{ m.away }}</span>
+        </div>
+      </div>
+
+      <div class="mini-1x2" [class.locked]="isLockedMatch(m.matchNo)">
+        <div class="cell"
+     [class.mine]="isMine(m.matchNo,'1')"
+     [class.other]="!isMine(m.matchNo,'1') && isTakenByOther(m.matchNo,'1')"
+     [style.background]="otherBg(m.matchNo,'1')"
+     [style.borderColor]="otherBorder(m.matchNo,'1')">
+  1
+</div>
+
+        <div class="cell"
+     [class.mine]="isMine(m.matchNo,'X')"
+     [class.other]="!isMine(m.matchNo,'X') && isTakenByOther(m.matchNo,'X')"
+     [style.background]="otherBg(m.matchNo,'X')"
+     [style.borderColor]="otherBorder(m.matchNo,'X')">
+  X
+</div>
+
+        <div class="cell"
+     [class.mine]="isMine(m.matchNo,'2')"
+     [class.other]="!isMine(m.matchNo,'2') && isTakenByOther(m.matchNo,'2')"
+     [style.background]="otherBg(m.matchNo,'2')"
+     [style.borderColor]="otherBorder(m.matchNo,'2')">
+  2
+</div>
+      </div>
+    </div>
+    <mat-divider></mat-divider>
+  </div>
+      <button class="close-button" mat-stroked-button mat-dialog-close>Stäng</button>
+</div>

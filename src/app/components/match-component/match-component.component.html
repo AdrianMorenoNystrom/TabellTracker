@@ -82,17 +82,27 @@
       </div>
     </div>
 
-    <div class="submit-row">
-      <button mat-raised-button
-              class="submit"
-              [class.ready]="canSubmit()"
-              [disabled]="!canSubmit() || saving"
-              (click)="lockInRow()">
-        {{ saving ? 'Sparar…' : 'Lås in rad' }}
-      </button>
+   <div class="submit-row">
+  <button mat-raised-button
+          class="submit"
+          [class.ready]="canSubmit()"
+          [disabled]="!canSubmit() || saving"
+          (click)="lockInRow()">
+    {{ saving ? 'Sparar…' : 'Lås in rad' }}
+  </button>
 
-      <div class="error" *ngIf="saveError">{{ saveError }}</div>
-    </div>
+  <div class="error" *ngIf="saveError">{{ saveError }}</div>
+</div>
+
+<!-- Sticky snapshot (alla skärmar) -->
+<div class="sticky-snapshot">
+  <button class="snapshot-button"
+          mat-stroked-button
+          (click)="openSnapshot()">
+    Översikt
+  </button>
+</div>
+
   </mat-card-content>
 </mat-card>
 
