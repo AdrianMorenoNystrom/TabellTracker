@@ -1,5 +1,6 @@
+
 .wrap {
-  width: min(600px, 98vw);
+  width: min(600px, 90vw);
   margin-top: 1rem;
   margin-bottom: 0.5rem;
   display: flex;
@@ -63,6 +64,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 140px;
+    font-size: 0.8rem;
   }
 
   .vs { opacity: 0.5; }
@@ -73,7 +75,7 @@
   grid-template-columns: repeat(3, 28px);
   gap: 6px;
   &.locked .cell {
-    opacity: 0.75;
+    opacity: 1;
   }
 }
 
@@ -103,4 +105,13 @@
     background-color: #F44336;
     align-self: center;
     color: white;
+}
+
+@media  (min-width: 600px) {
+  .teams {
+    .home, .away {
+      font-size: 1rem;
+    }
+  }
+  
 }
