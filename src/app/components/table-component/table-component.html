@@ -1,17 +1,18 @@
 ﻿<mat-card class="example-card" appearance="outlined">
   <mat-card-header class="header">
-    <h2>Stryktipstabellen 25/26</h2>
+    <h2>Stryktipstabellen {{ currentSeasonName }}</h2>
     <span class="spacer"></span>
   </mat-card-header>
 
   <mat-card-content>
     <!-- DESKTOP: vanlig mat-table -->
-    <table
-      mat-table
-      [dataSource]="players"
-      matSort
-      class="player-table mat-elevation-z1"
-    >
+    <div class="desktop-table-scroll">
+      <table
+        mat-table
+        [dataSource]="players"
+        matSort
+        class="player-table mat-elevation-z1"
+      >
       <ng-container matColumnDef="name">
         <th mat-header-cell *matHeaderCellDef mat-sort-header>Namn</th>
         <td mat-cell *matCellDef="let p">{{ p.name }}</td>
@@ -42,6 +43,43 @@
         </td>
       </ng-container>
 
+      <ng-container matColumnDef="seasonForm">
+        <th
+          mat-header-cell
+          *matHeaderCellDef
+          mat-sort-header
+          [attr.title]="'Alla omgångar jämfört med samma tidpunkt ' + previousSeasonName"
+        >
+          Säsong mot {{ previousSeasonName }}
+        </th>
+        <td mat-cell *matCellDef="let p" class="season-comparison-cell">
+          <ng-container *ngIf="p.seasonCurrentAccuracy != null; else noSeasonForm">
+            <div class="accuracy-comparison">
+              <strong>{{ p.seasonCurrentAccuracy | number:'1.0-1' }}%</strong>
+              <span *ngIf="p.seasonPreviousAccuracy != null">
+                mot {{ p.seasonPreviousAccuracy | number:'1.0-1' }}%
+              </span>
+            </div>
+            <small class="raw-score">
+              {{ p.seasonCurrentScore }}/{{ p.seasonCurrentPossible }}
+              <ng-container *ngIf="p.seasonPreviousAccuracy != null">
+                · {{ p.seasonPreviousScore }}/{{ p.seasonPreviousPossible }} förra
+              </ng-container>
+            </small>
+            <span
+              class="season-form"
+              [ngClass]="seasonFormClass(p.seasonFormDifference)"
+            >
+              <ng-container *ngIf="p.seasonFormDifference != null; else noDifference">
+                {{ p.seasonFormDifference > 0 ? '+' : '' }}{{ p.seasonFormDifference | number:'1.0-1' }}%
+              </ng-container>
+              <ng-template #noDifference>Ny</ng-template>
+            </span>
+          </ng-container>
+          <ng-template #noSeasonForm>–</ng-template>
+        </td>
+      </ng-container>
+
       <ng-container matColumnDef="actions">
         <th mat-header-cell *matHeaderCellDef></th>
         <td mat-cell *matCellDef="let p" class="actions-cell">
@@ -66,10 +104,11 @@
     topScore !== null &&
     topMatches !== null &&
     row.score === topScore &&
-    (row.total_matches ?? 0) === topMatches
+    row.total_matches === topMatches
   "
 ></tr>
-    </table>
+      </table>
+    </div>
 
     <!-- MOBIL: egen lista med kort -->
     <div class="mobile-player-list" *ngIf="players.data?.length">
@@ -81,7 +120,7 @@
     topScore !== null &&
     topMatches !== null &&
     p.score === topScore &&
-    (p.total_matches ?? 0) === topMatches
+    p.total_matches === topMatches
   "
 >
         <div class="mobile-card-header">
@@ -114,6 +153,47 @@
             <span class="value">
               {{ p.avg_score_per_round | number:'1.2-2' }}
             </span>
+          </div>
+          <div class="stat season-stat">
+            <span class="label">Säsong mot {{ previousSeasonName }}</span>
+            <ng-container *ngIf="p.seasonCurrentAccuracy != null; else noMobileSeasonForm">
+              <div class="mobile-season-summary">
+                <span class="accuracy-comparison">
+                  <strong>{{ p.seasonCurrentAccuracy | number:'1.0-1' }}%</strong>
+                  <span *ngIf="p.seasonPreviousAccuracy != null">
+                    mot {{ p.seasonPreviousAccuracy | number:'1.0-1' }}%
+                  </span>
+                </span>
+                <small class="raw-score">
+                  {{ p.seasonCurrentScore }}/{{ p.seasonCurrentPossible }}
+                  <ng-container *ngIf="p.seasonPreviousAccuracy != null">
+                    · {{ p.seasonPreviousScore }}/{{ p.seasonPreviousPossible }} förra
+                  </ng-container>
+                </small>
+                <span
+                  class="value season-form"
+                  [ngClass]="seasonFormClass(p.seasonFormDifference)"
+                >
+                  <ng-container *ngIf="p.seasonFormDifference != null; else noMobileDifference">
+                    {{ p.seasonFormDifference > 0 ? '+' : '' }}{{ p.seasonFormDifference | number:'1.0-1' }}%
+                  </ng-container>
+                  <ng-template #noMobileDifference>Ny</ng-template>
+                </span>
+              </div>
+            </ng-container>
+            <ng-template #noMobileSeasonForm>–</ng-template>
+          </div>
+          <div class="stat forecast-stat">
+            <span class="label">Prognos</span>
+            <ng-container *ngIf="p.predictedNextScore != null; else noMobileForecast">
+              <span class="value">
+                Nästa: {{ p.predictedNextScore | number:'1.0-1' }}/{{ p.predictedNextPossible }}
+              </span>
+              <small *ngIf="p.projectedFinalScore != null">
+                Slut: cirka {{ p.projectedFinalScore }} rätt
+              </small>
+            </ng-container>
+            <ng-template #noMobileForecast>–</ng-template>
           </div>
         </div>
       </div>

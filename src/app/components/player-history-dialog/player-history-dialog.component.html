@@ -1,29 +1,160 @@
-<h2 mat-dialog-title>Historik – {{ data.player.name }}</h2>
-<div mat-dialog-content>
-  <div *ngIf="loading"><mat-progress-spinner></mat-progress-spinner>></div>
-  <table *ngIf="!loading" mat-table [dataSource]="entries" class="mat-elevation-z1" style="width:100%">
-    <ng-container matColumnDef="round">
-      <th mat-header-cell *matHeaderCellDef>Omgång</th>
-      <td mat-cell *matCellDef="let e">{{ e.roundNumber }}</td>
-    </ng-container>
-
-    <ng-container matColumnDef="week">
-      <th mat-header-cell *matHeaderCellDef>Vecka</th>
-      <td mat-cell *matCellDef="let e">{{ e.week }}</td>
-    </ng-container>
-
-    <ng-container matColumnDef="score">
-      <th mat-header-cell *matHeaderCellDef>Rätt</th>
-      <td mat-cell *matCellDef="let e">
-        {{ e.score }}/{{ e.matchesPicked }}
-        <span *ngIf="e.score === e.matchesPicked"> ✅</span>
-      </td>
-    </ng-container>
-
-    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-    <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-  </table>
+<div class="dialog-heading">
+  <div>
+    <p class="eyebrow">Spelarprofil</p>
+    <h2 mat-dialog-title>{{ data.player.name }}</h2>
+    <p class="season-name" *ngIf="currentSeasonName">Säsong {{ currentSeasonName }}</p>
+  </div>
 </div>
+
+<div mat-dialog-content class="profile-content">
+  <div class="loading-state" *ngIf="loading">
+    <mat-progress-spinner diameter="42"></mat-progress-spinner>
+    <span>Hämtar spelarstatistik…</span>
+  </div>
+
+  <div class="error-state" *ngIf="loadError">
+    Spelarstatistiken kunde inte hämtas just nu.
+  </div>
+
+  <ng-container *ngIf="!loading && !loadError">
+    <section class="stat-grid">
+      <article class="stat-card accent-card">
+        <span class="stat-label">Säsongen</span>
+        <strong>{{ currentScore }}/{{ currentPossible }}</strong>
+        <small>{{ entries.length }} spelade omgångar</small>
+      </article>
+      <article class="stat-card">
+        <span class="stat-label">Träffprocent</span>
+        <strong>{{ currentAccuracy | number:'1.0-1' }}%</strong>
+        <small>{{ currentAverage | number:'1.1-2' }} rätt per omgång</small>
+      </article>
+      <article class="stat-card">
+        <span class="stat-label">Form · senaste 5</span>
+        <strong>{{ recentFormAccuracy | number:'1.0-1' }}%</strong>
+        <small>Baserat på faktiskt antal val</small>
+      </article>
+      <article class="stat-card">
+        <span class="stat-label">Mot {{ previousSeasonName || 'förra säsongen' }}</span>
+        <strong
+          class="difference"
+          [ngClass]="differenceClass(comparison?.seasonDifference)"
+        >
+          <ng-container *ngIf="comparison?.seasonDifference != null; else newPlayer">
+            {{ comparison!.seasonDifference! > 0 ? '+' : '' }}{{ comparison!.seasonDifference | number:'1.0-1' }}%
+          </ng-container>
+          <ng-template #newPlayer>Ny</ng-template>
+        </strong>
+        <small *ngIf="comparison?.previousPossible">
+          {{ comparison!.previousScore }}/{{ comparison!.previousPossible }} vid samma läge
+        </small>
+      </article>
+    </section>
+
+    <section class="forecast-panel" *ngIf="forecast">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Prognos</p>
+          <h3>Om formen håller i sig</h3>
+        </div>
+        <span class="forecast-confidence">{{ forecast.predictionAccuracy | number:'1.0-1' }}% beräknad träff</span>
+      </div>
+      <div class="forecast-grid">
+        <div class="forecast-number">
+          <span>Nästa omgång</span>
+          <strong>{{ forecast.predictedNextScore | number:'1.0-1' }}/{{ forecast.predictedNextPossible }}</strong>
+          <small>förväntade rätt</small>
+        </div>
+        <div class="forecast-number">
+          <span>Vid säsongsslut</span>
+          <strong *ngIf="forecast.projectedFinalScore != null; else noSeasonProjection">
+            cirka {{ forecast.projectedFinalScore }}
+          </strong>
+          <ng-template #noSeasonProjection><strong>–</strong></ng-template>
+          <small *ngIf="forecast.projectedSeasonRounds">
+            efter {{ forecast.projectedSeasonRounds }} omgångar
+          </small>
+        </div>
+      </div>
+      <p class="forecast-explanation">
+        Prognosen väger hela säsongen till 60% och de fem senaste omgångarna till 40%.
+        Sluttotalen antar lika många omgångar som förra säsongen och att spelaren deltar varje gång.
+      </p>
+    </section>
+
+    <section class="record-grid">
+      <div class="record-item">
+        <span class="stat-label">Bästa omgång</span>
+        <strong *ngIf="bestEntry; else noRecord">
+          {{ bestEntry.score }}/{{ bestEntry.matchesPicked }} rätt
+        </strong>
+        <small *ngIf="bestEntry">
+          Omgång {{ bestEntry.roundNumber }} · {{ bestEntry.seasonName }}
+        </small>
+        <ng-template #noRecord>–</ng-template>
+      </div>
+      <div class="record-item">
+        <span class="stat-label">Totalt alla säsonger</span>
+        <strong>{{ allTimeScore }}/{{ allTimePossible }} rätt</strong>
+        <small>{{ seasonSummaries.length }} säsonger med resultat</small>
+      </div>
+    </section>
+
+    <section class="section-block" *ngIf="seasonSummaries.length">
+      <div class="section-heading">
+        <h3>Säsongshistorik</h3>
+      </div>
+      <div class="season-list">
+        <div
+          class="season-row"
+          *ngFor="let season of seasonSummaries"
+          [class.current-season]="season.isCurrent"
+        >
+          <div>
+            <strong>{{ season.name }}</strong>
+            <small>{{ season.rounds }} omgångar</small>
+          </div>
+          <span>{{ season.score }}/{{ season.possible }}</span>
+          <strong>{{ season.accuracy | number:'1.0-1' }}%</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-block" *ngIf="entries.length">
+      <div class="section-heading">
+        <h3>Omgångar {{ currentSeasonName }}</h3>
+      </div>
+      <div class="history-table-scroll">
+        <table mat-table [dataSource]="entries" class="history-table mat-elevation-z1">
+          <ng-container matColumnDef="round">
+            <th mat-header-cell *matHeaderCellDef>Omgång</th>
+            <td mat-cell *matCellDef="let entry">{{ entry.roundNumber }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="week">
+            <th mat-header-cell *matHeaderCellDef>Vecka</th>
+            <td mat-cell *matCellDef="let entry">{{ entry.week }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="score">
+            <th mat-header-cell *matHeaderCellDef>Resultat</th>
+            <td mat-cell *matCellDef="let entry">
+              <strong>{{ entry.score }}/{{ entry.matchesPicked }}</strong>
+              <span *ngIf="entry.score === entry.matchesPicked"> ✓</span>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        </table>
+      </div>
+    </section>
+
+    <p class="empty-state" *ngIf="!entries.length">
+      Det finns ännu inga resultat för spelaren den här säsongen.
+    </p>
+  </ng-container>
+</div>
+
 <div mat-dialog-actions align="end">
   <button mat-button mat-dialog-close>Stäng</button>
 </div>

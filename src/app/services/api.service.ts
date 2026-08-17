@@ -4,6 +4,7 @@ import {  SupabaseClient } from '@supabase/supabase-js';
 import { Player } from '../interfaces/player';
 import { Round, RoundCreate } from '../interfaces/round';
 import { Article } from '../interfaces/article';
+import { Season } from '../interfaces/season';
 import { supabase } from './supabase.client';
 @Injectable({ providedIn: 'root' })
 export class ApiService {
@@ -21,16 +22,48 @@ export class ApiService {
   // PLAYERS
   // --------------------
 
-  getPlayers(): Observable<Player[]> {
+  getPlayers(seasonId?: number): Observable<Player[]> {
+    const query = this.supabase
+      .from('player_stats_by_season')
+      .select(
+        'season_id, season_name, is_current, id, name, score, total_matches, rounds_played, avg_score_per_round'
+      );
+
+    const filteredQuery = seasonId == null
+      ? query.eq('is_current', true)
+      : query.eq('season_id', seasonId);
+
     return from(
-      this.supabase
-        .from('player_stats')
-        .select('id, name, score, total_matches, rounds_played, avg_score_per_round')
+      filteredQuery
         .order('score', { ascending: false })
     ).pipe(
       map(({ data, error }) => {
         if (error) throw error;
         return (data || []) as Player[];
+      })
+    );
+  }
+
+  // --------------------
+  // SEASONS
+  // --------------------
+
+  getSeasons(): Observable<Season[]> {
+    return from(
+      this.supabase
+        .from('seasons')
+        .select('id, name, start_year, end_year, is_current')
+        .order('start_year', { ascending: false })
+    ).pipe(
+      map(({ data, error }) => {
+        if (error) throw error;
+        return (data ?? []).map((season) => ({
+          id: Number(season.id),
+          name: String(season.name),
+          startYear: Number(season.start_year),
+          endYear: Number(season.end_year),
+          isCurrent: Boolean(season.is_current),
+        }));
       })
     );
   }
@@ -83,35 +116,47 @@ export class ApiService {
   // ROUNDS
   // --------------------
 
-  getRounds(): Observable<Round[]> {
+  getRounds(seasonId?: number): Observable<Round[]> {
+    const query = this.supabase
+      .from('rounds')
+      .select(`
+        id, roundnumber, week, totalscore, season_id,
+        season:seasons!inner ( id, name, is_current ),
+        round_players (
+          score,
+          matches_picked,
+          player:players ( id, name )
+        )
+      `);
+
+    const filteredQuery = seasonId == null
+      ? query.eq('season.is_current', true)
+      : query.eq('season_id', seasonId);
+
     return from(
-      this.supabase
-        .from('rounds')
-        .select(`
-          id, roundnumber, week, totalscore,
-          round_players (
-            score,
-            matches_picked,
-            player:players ( id, name )
-          )
-        `)
+      filteredQuery
         .order('id', { ascending: false })
     ).pipe(
       map(({ data, error }) => {
         if (error) throw error;
 
-        return (data || []).map((r: any) => ({
-          id: r.id,
-          roundNumber: r.roundnumber,
-          week: r.week,
-          totalScore: r.totalscore,
-          players: (r.round_players || []).map((rp: any) => ({
-            id: rp.player?.id,
-            name: rp.player?.name,
-            score: rp.score,
-            matchesPicked: rp.matches_picked,
-          })),
-        })) as Round[];
+        return (data || []).map((r: any) => {
+          const season = Array.isArray(r.season) ? r.season[0] : r.season;
+          return {
+            id: r.id,
+            roundNumber: r.roundnumber,
+            week: r.week,
+            totalScore: r.totalscore,
+            seasonId: Number(r.season_id),
+            seasonName: season?.name,
+            players: (r.round_players || []).map((rp: any) => ({
+              id: rp.player?.id,
+              name: rp.player?.name,
+              score: rp.score,
+              matchesPicked: rp.matches_picked,
+            })),
+          };
+        }) as Round[];
       })
     );
   }
@@ -217,6 +262,14 @@ export class ApiService {
   private async addRoundSupabase(
     round: RoundCreate
   ): Promise<{ ok: boolean; id: number; totalScore: number }> {
+    const currentSeasonRes = await this.supabase
+      .from('seasons')
+      .select('id')
+      .eq('is_current', true)
+      .single();
+
+    if (currentSeasonRes.error) throw currentSeasonRes.error;
+
     const uniqueNames = Array.from(new Set(round.players.map(p => p.name)));
 
     const upsertRes = await this.supabase
@@ -232,7 +285,11 @@ export class ApiService {
 
     const roundRes = await this.supabase
       .from('rounds')
-      .insert({ roundnumber: round.roundNumber, week: round.week })
+      .insert({
+        roundnumber: round.roundNumber,
+        week: round.week,
+        season_id: currentSeasonRes.data.id,
+      })
       .select('id')
       .single();
 
