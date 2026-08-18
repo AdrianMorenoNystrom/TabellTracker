@@ -11,6 +11,7 @@ import { RoundDetailsDialogComponent } from './round-details-dialog.component';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormField, MatLabel, MatSelect, MatSelectModule } from '@angular/material/select';
 import { AuthService } from '../../services/auth.service';
+import { getRoundWinners } from '../../utils/standings';
 
 @Component({
   selector: 'app-roundlist-component',
@@ -43,6 +44,10 @@ ngOnInit() {
 toggleShowAll() {
   this.showAll = !this.showAll;
   this.updateVisibleRounds();
+}
+
+winnerNames(round: Round): string[] {
+  return getRoundWinners(round);
 }
 
 private updateVisibleRounds() {

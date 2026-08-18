@@ -18,28 +18,27 @@
         <td mat-cell *matCellDef="let p">{{ p.name }}</td>
       </ng-container>
 
-      <ng-container matColumnDef="totalMatches">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>
-          Matcher
-        </th>
-        <td mat-cell *matCellDef="let p">
-          {{ p.total_matches }}
-        </td>
-      </ng-container>
-
       <ng-container matColumnDef="score">
         <th mat-header-cell *matHeaderCellDef mat-sort-header>
-          Totalt antal rätt
+          Totalt rätt
         </th>
         <td mat-cell *matCellDef="let p">{{ p.score }}</td>
       </ng-container>
 
-      <ng-container matColumnDef="avgRound">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>
-          Snitt / omgång
-        </th>
-        <td mat-cell *matCellDef="let p">
-          {{ p.avg_score_per_round | number:'1.2-2' }}
+      <ng-container matColumnDef="placement">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Placering</th>
+        <td mat-cell *matCellDef="let p" class="placement-cell">
+          <strong>{{ p.currentPlacement == null ? '–' : '#' + p.currentPlacement }}</strong>
+          <span
+            class="placement-change"
+            [class.climbing]="(p.placementChange ?? 0) > 0"
+            [class.falling]="(p.placementChange ?? 0) < 0"
+          >
+            <ng-container *ngIf="p.placementChange != null; else newPlacement">
+              {{ p.placementChange > 0 ? '↑ ' + p.placementChange : p.placementChange < 0 ? '↓ ' + (-p.placementChange) : '–' }}
+            </ng-container>
+            <ng-template #newPlacement>Ny</ng-template>
+          </span>
         </td>
       </ng-container>
 
@@ -125,8 +124,18 @@
 >
         <div class="mobile-card-header">
           <div class="name-row">
-            <span class="rank">#{{ i + 1 }}</span>
+            <span class="rank">#{{ p.currentPlacement ?? (i + 1) }}</span>
             <span class="name">{{ p.name }}</span>
+            <span
+              class="placement-change"
+              [class.climbing]="(p.placementChange ?? 0) > 0"
+              [class.falling]="(p.placementChange ?? 0) < 0"
+            >
+              <ng-container *ngIf="p.placementChange != null; else newMobilePlacement">
+                {{ p.placementChange > 0 ? '↑ ' + p.placementChange : p.placementChange < 0 ? '↓ ' + (-p.placementChange) : '–' }}
+              </ng-container>
+              <ng-template #newMobilePlacement>Ny</ng-template>
+            </span>
           </div>
           <button
                         *ngIf="auth.isUserAdmin$() | async"
@@ -141,18 +150,8 @@
 
         <div class="mobile-stats-row">
           <div class="stat">
-            <span class="label">Matcher</span>
-            <span class="value">{{ p.total_matches }}</span>
-          </div>
-                    <div class="stat">
             <span class="label">Rätt</span>
             <span class="value">{{ p.score }}</span>
-          </div>
-          <div class="stat">
-            <span class="label">Snitt/omg</span>
-            <span class="value">
-              {{ p.avg_score_per_round | number:'1.2-2' }}
-            </span>
           </div>
           <div class="stat season-stat">
             <span class="label">Säsong mot {{ previousSeasonName }}</span>
@@ -182,18 +181,6 @@
               </div>
             </ng-container>
             <ng-template #noMobileSeasonForm>–</ng-template>
-          </div>
-          <div class="stat forecast-stat">
-            <span class="label">Prognos</span>
-            <ng-container *ngIf="p.predictedNextScore != null; else noMobileForecast">
-              <span class="value">
-                Nästa: {{ p.predictedNextScore | number:'1.0-1' }}/{{ p.predictedNextPossible }}
-              </span>
-              <small *ngIf="p.projectedFinalScore != null">
-                Slut: cirka {{ p.projectedFinalScore }} rätt
-              </small>
-            </ng-container>
-            <ng-template #noMobileForecast>–</ng-template>
           </div>
         </div>
       </div>

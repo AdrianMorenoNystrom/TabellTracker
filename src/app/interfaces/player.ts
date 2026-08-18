@@ -15,9 +15,8 @@ export interface Player {
   seasonCurrentPossible?: number;
   seasonPreviousScore?: number;
   seasonPreviousPossible?: number;
-  predictedNextScore?: number | null;
-  predictedNextPossible?: number | null;
-  projectedFinalScore?: number | null;
-  projectedSeasonRounds?: number | null;
-  predictionAccuracy?: number | null;
+  currentPlacement?: number | null;
+  previousPlacement?: number | null;
+  placementChange?: number | null;
+  bestPlacement?: number | null;
 }

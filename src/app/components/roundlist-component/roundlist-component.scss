@@ -75,6 +75,37 @@
   color: #2e7d32;
 }
 
+.round-winner {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-top: 0.75rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 0.45rem;
+  color: #744b00;
+  background: #fff1cd;
+}
+
+.round-winner:empty {
+  display: none;
+}
+
+.round-winner mat-icon {
+  flex: 0 0 auto;
+}
+
+.round-winner div {
+  display: flex;
+  flex-direction: column;
+}
+
+.round-winner span {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 @media (max-width: 600px) {
   .sort-field {
     width: 100%;

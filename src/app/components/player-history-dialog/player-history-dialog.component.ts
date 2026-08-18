@@ -4,26 +4,31 @@ import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
+import { Chart, ChartConfiguration, ChartOptions, registerables } from 'chart.js';
+import { BaseChartDirective } from 'ng2-charts';
 import { forkJoin, map, of, switchMap } from 'rxjs';
 import { Player } from '../../interfaces/player';
 import { Round } from '../../interfaces/round';
 import { Season } from '../../interfaces/season';
 import { ApiService } from '../../services/api.service';
 import {
-  calculatePlayerForecasts,
-  PlayerForecast,
-} from '../../utils/player-forecast';
-import {
   calculatePlayerPerformance,
   PlayerPerformanceComparison,
 } from '../../utils/player-performance';
+import {
+  calculatePlacementSummaries,
+  calculateRoundWins,
+  PlayerPlacementSummary,
+  RoundWinSummary,
+} from '../../utils/standings';
+
+Chart.register(...registerables);
 
 interface Entry {
   roundNumber: number;
   week: number;
   score: number;
   matchesPicked: number;
-  accuracy: number;
   seasonName: string;
 }
 
@@ -45,6 +50,7 @@ interface SeasonSummary {
     MatTableModule,
     MatButtonModule,
     MatProgressSpinnerModule,
+    BaseChartDirective,
   ],
   templateUrl: './player-history-dialog.component.html',
   styleUrl: './player-history-dialog.component.scss',
@@ -64,9 +70,32 @@ export class PlayerHistoryDialogComponent {
   recentFormAccuracy: number | null = null;
   allTimeScore = 0;
   allTimePossible = 0;
-  bestEntry: Entry | null = null;
-  forecast: PlayerForecast | null = null;
   comparison: PlayerPerformanceComparison | null = null;
+  placement: PlayerPlacementSummary | null = null;
+  roundWins: RoundWinSummary = { total: 0, solo: 0, shared: 0 };
+  scoreChartData: ChartConfiguration<'bar'>['data'] = {
+    labels: [],
+    datasets: [],
+  };
+  scoreChartOptions: ChartOptions<'bar'> = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: (item) => `Resultat: ${item.parsed.y} rätt`,
+        },
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        suggestedMax: 4,
+        ticks: { stepSize: 1 },
+      },
+    },
+  };
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: { player: Player },
@@ -153,19 +182,40 @@ export class PlayerHistoryDialogComponent {
       (sum, entry) => sum + entry.matchesPicked,
       0
     );
-    this.bestEntry = [...allEntries].sort(
-      (a, b) => b.accuracy - a.accuracy || b.score - a.score
-    )[0] ?? null;
-
-    this.forecast =
-      calculatePlayerForecasts(currentRounds, previousRounds).find(
-        (forecast) => forecast.name === this.data.player.name
-      ) ?? null;
     this.comparison =
       calculatePlayerPerformance(currentRounds, previousRounds).find(
         (comparison) => comparison.name === this.data.player.name
       ) ?? null;
+    this.placement =
+      calculatePlacementSummaries(currentRounds).find(
+        (placement) => placement.name === this.data.player.name
+      ) ?? null;
+    this.roundWins = calculateRoundWins(currentRounds, this.data.player.name);
+    this.buildScoreChart();
     this.loading = false;
+  }
+
+  private buildScoreChart(): void {
+    const chronological = [...this.entries].sort(
+      (a, b) => a.roundNumber - b.roundNumber || a.week - b.week
+    );
+    this.scoreChartData = {
+      labels: chronological.map((entry) => `Omg ${entry.roundNumber}`),
+      datasets: [
+        {
+          label: 'Rätt',
+          data: chronological.map((entry) => entry.score),
+          backgroundColor: chronological.map((entry) =>
+            entry.score >= this.currentAverage ? '#087A2F' : '#7A9AB5'
+          ),
+          borderColor: chronological.map((entry) =>
+            entry.score >= this.currentAverage ? '#087A2F' : '#00427A'
+          ),
+          borderWidth: 1,
+          borderRadius: 4,
+        },
+      ],
+    };
   }
 
   private entriesFor(rounds: Round[], seasonName: string): Entry[] {
@@ -185,7 +235,6 @@ export class PlayerHistoryDialogComponent {
           week: round.week,
           score,
           matchesPicked,
-          accuracy: matchesPicked ? (score / matchesPicked) * 100 : 0,
           seasonName,
         },
       ];

@@ -51,13 +51,15 @@ mat-card-content {
 }
 
 .player-table .mat-column-name {
-  width: 17%;
+  width: 23%;
 }
 
-.player-table .mat-column-totalMatches,
-.player-table .mat-column-score,
-.player-table .mat-column-avgRound {
-  width: 12%;
+.player-table .mat-column-score {
+  width: 14%;
+}
+
+.player-table .mat-column-placement {
+  width: 18%;
 }
 
 .player-table .mat-column-actions {
@@ -81,15 +83,30 @@ mat-card-content {
   text-align: right;
 }
 
+.placement-cell strong,
+.placement-cell .placement-change {
+  display: block;
+}
+
+.placement-change {
+  width: fit-content;
+  color: #56616c;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.placement-change.climbing {
+  color: #087a2f;
+}
+
+.placement-change.falling {
+  color: #b3261e;
+}
+
 .season-comparison-cell {
   min-width: 0;
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
-}
-
-.forecast-stat small {
-  margin-top: 0.15rem;
-  color: #56616c;
 }
 
 .accuracy-comparison {
@@ -224,12 +241,6 @@ box-shadow: inset 0 0px 20px 4px #fff, inset 0 4px 5px 0px #008912;  }
 
   .season-stat {
     min-width: 100%;
-  }
-
-  .forecast-stat {
-    min-width: 100%;
-    padding-top: 0.65rem;
-    border-top: 1px solid rgba(0, 66, 122, 0.12);
   }
 
   .mobile-season-summary {

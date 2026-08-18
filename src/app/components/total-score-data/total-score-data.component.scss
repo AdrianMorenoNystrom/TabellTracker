@@ -10,6 +10,10 @@
   margin: 0.75rem 0 1.25rem;
 }
 
+.toggle-label-mobile {
+  display: none;
+}
+
 .chart-container {
   position: relative;
   width: 100%;
@@ -26,6 +30,76 @@
   padding: 0.75rem 1rem;
   border-left: 4px solid #00427A;
   background: rgba(0, 66, 122, 0.06);
+}
+
+.comparison-heading {
+  display: block;
+  margin-bottom: 0.65rem;
+  text-transform: uppercase;
+}
+
+.season-results {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+  align-items: stretch;
+  gap: 0.6rem;
+}
+
+.season-result,
+.comparison-difference {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  column-gap: 0.5rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid rgba(0, 66, 122, 0.12);
+  border-radius: 0.4rem;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.season-result strong {
+  grid-column: 2;
+}
+
+.season-label {
+  color: #4b5b68;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.season-marker {
+  grid-row: 1 / span 2;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: #00427A;
+}
+
+.previous-result .season-marker {
+  background: #7A8490;
+}
+
+.comparison-difference {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 4rem;
+  text-align: center;
+}
+
+.comparison-difference > span {
+  color: #4b5b68;
+  font-size: 0.7rem;
+}
+
+.difference {
+  font-size: 1rem;
+}
+
+.missing-round {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: #4b5b68;
 }
 
 .difference.positive {
@@ -162,6 +236,29 @@
   color: #087a2f;
 }
 
+.placement-chart-card {
+  padding: 0.9rem;
+  border: 1px solid rgba(0, 66, 122, 0.14);
+  border-radius: 0.5rem;
+  background: #fff;
+}
+
+.placement-season-toggle {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0.75rem;
+}
+
+.placement-chart-card h3 {
+  margin: 0 0 0.75rem;
+}
+
+.placement-chart-container {
+  position: relative;
+  width: 100%;
+  height: 330px;
+}
+
 .behind .delta-metric strong {
   color: #b3261e;
 }
@@ -173,6 +270,33 @@
 
   .view-toggle mat-button-toggle {
     flex: 1;
+    min-width: 0;
+  }
+
+  :host ::ng-deep .view-toggle .mat-button-toggle-label-content {
+    padding: 0 0.4rem;
+    font-size: 0.72rem;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+  }
+
+  .toggle-label-desktop {
+    display: none;
+  }
+
+  .toggle-label-mobile {
+    display: inline;
+  }
+
+  .season-results {
+    grid-template-columns: 1fr;
+    gap: 0.45rem;
+  }
+
+  .comparison-difference {
+    flex-direction: row;
+    justify-content: space-between;
+    text-align: left;
   }
 
   .chart-container {
@@ -180,6 +304,10 @@
   }
 
   .player-chart {
+    height: 300px;
+  }
+
+  .placement-chart-container {
     height: 300px;
   }
 

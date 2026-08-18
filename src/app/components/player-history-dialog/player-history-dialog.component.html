@@ -19,8 +19,8 @@
   <ng-container *ngIf="!loading && !loadError">
     <section class="stat-grid">
       <article class="stat-card accent-card">
-        <span class="stat-label">Säsongen</span>
-        <strong>{{ currentScore }}/{{ currentPossible }}</strong>
+        <span class="stat-label">Säsong {{ currentSeasonName }}</span>
+        <strong>{{ currentScore }}/{{ currentPossible }} rätt</strong>
         <small>{{ entries.length }} spelade omgångar</small>
       </article>
       <article class="stat-card">
@@ -50,48 +50,61 @@
       </article>
     </section>
 
-    <section class="forecast-panel" *ngIf="forecast">
+    <section class="placement-panel" *ngIf="placement">
       <div class="section-heading">
-        <div>
-          <p class="eyebrow">Prognos</p>
-          <h3>Om formen håller i sig</h3>
-        </div>
-        <span class="forecast-confidence">{{ forecast.predictionAccuracy | number:'1.0-1' }}% beräknad träff</span>
+        <h3>Placering och omgångssegrar</h3>
       </div>
-      <div class="forecast-grid">
-        <div class="forecast-number">
-          <span>Nästa omgång</span>
-          <strong>{{ forecast.predictedNextScore | number:'1.0-1' }}/{{ forecast.predictedNextPossible }}</strong>
-          <small>förväntade rätt</small>
-        </div>
-        <div class="forecast-number">
-          <span>Vid säsongsslut</span>
-          <strong *ngIf="forecast.projectedFinalScore != null; else noSeasonProjection">
-            cirka {{ forecast.projectedFinalScore }}
-          </strong>
-          <ng-template #noSeasonProjection><strong>–</strong></ng-template>
-          <small *ngIf="forecast.projectedSeasonRounds">
-            efter {{ forecast.projectedSeasonRounds }} omgångar
+      <div class="placement-grid">
+        <div class="placement-item accent-placement">
+          <span class="stat-label">Nuvarande</span>
+          <strong>#{{ placement.currentPlacement }}</strong>
+          <small
+            [class.climbing]="placement.placementChange! > 0"
+            [class.falling]="placement.placementChange! < 0"
+          >
+            <ng-container *ngIf="placement.placementChange != null; else firstPlacement">
+              {{ placement.placementChange > 0 ? '↑ ' + placement.placementChange : placement.placementChange < 0 ? '↓ ' + (-placement.placementChange) : 'Oförändrad' }}
+            </ng-container>
+            <ng-template #firstPlacement>Första placeringen</ng-template>
           </small>
         </div>
+        <div class="placement-item">
+          <span class="stat-label">Förra omgången</span>
+          <strong>{{ placement.previousPlacement == null ? '–' : '#' + placement.previousPlacement }}</strong>
+          <small>Placering före senaste resultatet</small>
+        </div>
+        <div class="placement-item">
+          <span class="stat-label">Bästa placering</span>
+          <strong>#{{ placement.bestPlacement }}</strong>
+          <small>Under {{ currentSeasonName }}</small>
+        </div>
+        <div class="placement-item winner-item">
+          <span class="stat-label">Omgångssegrar</span>
+          <strong>{{ roundWins.total }}</strong>
+          <small>{{ roundWins.solo }} egna · {{ roundWins.shared }} delade</small>
+        </div>
       </div>
-      <p class="forecast-explanation">
-        Prognosen väger hela säsongen till 60% och de fem senaste omgångarna till 40%.
-        Sluttotalen antar lika många omgångar som förra säsongen och att spelaren deltar varje gång.
+    </section>
+
+    <section class="section-block" *ngIf="entries.length">
+      <div class="section-heading chart-heading">
+        <h3>Utveckling {{ currentSeasonName }}</h3>
+        <span>Säsongssnitt: {{ currentAverage | number:'1.1-2' }} rätt</span>
+      </div>
+      <p class="chart-explanation">
+        Gröna staplar ligger på eller över spelarens säsongssnitt.
       </p>
+      <div class="score-chart-container">
+        <canvas
+          baseChart
+          [data]="scoreChartData"
+          [options]="scoreChartOptions"
+          [type]="'bar'"
+        ></canvas>
+      </div>
     </section>
 
     <section class="record-grid">
-      <div class="record-item">
-        <span class="stat-label">Bästa omgång</span>
-        <strong *ngIf="bestEntry; else noRecord">
-          {{ bestEntry.score }}/{{ bestEntry.matchesPicked }} rätt
-        </strong>
-        <small *ngIf="bestEntry">
-          Omgång {{ bestEntry.roundNumber }} · {{ bestEntry.seasonName }}
-        </small>
-        <ng-template #noRecord>–</ng-template>
-      </div>
       <div class="record-item">
         <span class="stat-label">Totalt alla säsonger</span>
         <strong>{{ allTimeScore }}/{{ allTimePossible }} rätt</strong>

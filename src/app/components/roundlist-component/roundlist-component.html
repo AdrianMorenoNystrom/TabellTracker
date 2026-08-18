@@ -48,6 +48,15 @@
           >
             <strong>{{ r.totalScore }}</strong>
           </div>
+          <div class="round-winner" *ngIf="winnerNames(r) as winners">
+            <ng-container *ngIf="winners.length">
+              <mat-icon aria-hidden="true">emoji_events</mat-icon>
+              <div>
+                <span>{{ winners.length === 1 ? 'Omgångsvinnare' : 'Delad omgångsseger' }}</span>
+                <strong>{{ winners.join(', ') }}</strong>
+              </div>
+            </ng-container>
+          </div>
         </mat-card-content>
         <mat-card-actions>
           <button mat-stroked-button (click)="openDetails(r)">Detaljer</button>

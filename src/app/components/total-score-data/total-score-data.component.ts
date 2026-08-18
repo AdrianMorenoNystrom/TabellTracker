@@ -17,6 +17,7 @@ import {
   PerformanceStatus,
   PlayerPerformanceComparison,
 } from '../../utils/player-performance';
+import { calculatePlacementHistory } from '../../utils/standings';
 Chart.register(...registerables);
 @Component({
   selector: 'app-total-score-data',
@@ -37,7 +38,8 @@ export class TotalScoreDataComponent {
 
   loading = true;
   error: string | null = null;
-  viewMode: 'total' | 'players' = 'total';
+  viewMode: 'total' | 'players' | 'placements' = 'total';
+  placementSeasonView: 'current' | 'previous' = 'current';
   currentSeasonName = '';
   previousSeasonName: string | null = null;
   playerPerformance: PlayerPerformanceComparison[] = [];
@@ -94,7 +96,55 @@ export class TotalScoreDataComponent {
     },
   };
 
+  placementChartData: ChartConfiguration<'line'>['data'] = {
+    labels: [],
+    datasets: [],
+  };
+  previousPlacementChartData: ChartConfiguration<'line'>['data'] = {
+    labels: [],
+    datasets: [],
+  };
+  placementChartOptions: ChartOptions<'line'> = this.createPlacementChartOptions(4);
+  previousPlacementChartOptions: ChartOptions<'line'> =
+    this.createPlacementChartOptions(4);
+
   constructor(private api: ApiService) {}
+
+  private createPlacementChartOptions(startPosition: number): ChartOptions<'line'> {
+    return {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { display: true, position: 'bottom' },
+      tooltip: {
+        callbacks: {
+          label: (item) => `${item.dataset.label}: plats ${item.parsed.y}`,
+        },
+      },
+    },
+    scales: {
+      y: {
+        min: 1,
+        max: Math.max(2, startPosition),
+        reverse: true,
+        title: { display: true, text: 'Placering' },
+        ticks: {
+          stepSize: 1,
+          callback: (value) =>
+            Number(value) === startPosition ? 'Start' : `#${value}`,
+        },
+      },
+      x: {
+        title: { display: true, text: 'Omgång' },
+      },
+    },
+    elements: {
+      point: { radius: 4, hoverRadius: 6 },
+      line: { tension: 0.2, borderWidth: 2.5 },
+    },
+    };
+  };
 
   ngOnInit() {
     this.api.getSeasons().subscribe({
@@ -129,6 +179,31 @@ export class TotalScoreDataComponent {
       next: ({ currentRounds, previousRounds }) => {
         this.buildComparison(currentRounds, previousRounds);
         this.buildPlayerPerformance(currentRounds, previousRounds);
+        const placementHistory = calculatePlacementHistory(currentRounds);
+        const previousPlacementHistory = calculatePlacementHistory(previousRounds);
+        const playerCount = new Set(
+          placementHistory.flatMap((snapshot) =>
+            snapshot.standings.map((standing) => standing.name)
+          )
+        ).size;
+        const previousPlayerCount = new Set(
+          previousPlacementHistory.flatMap((snapshot) =>
+            snapshot.standings.map((standing) => standing.name)
+          )
+        ).size;
+        const startPosition = Math.max(2, playerCount + 1);
+        const previousStartPosition = Math.max(2, previousPlayerCount + 1);
+        this.placementChartData = this.buildPlacementHistory(
+          placementHistory,
+          startPosition
+        );
+        this.previousPlacementChartData = this.buildPlacementHistory(
+          previousPlacementHistory,
+          previousStartPosition
+        );
+        this.placementChartOptions = this.createPlacementChartOptions(startPosition);
+        this.previousPlacementChartOptions =
+          this.createPlacementChartOptions(previousStartPosition);
         this.loading = false;
       },
       error: () => {
@@ -191,8 +266,12 @@ export class TotalScoreDataComponent {
     };
   }
 
-  setViewMode(mode: 'total' | 'players') {
+  setViewMode(mode: 'total' | 'players' | 'placements') {
     this.viewMode = mode;
+  }
+
+  setPlacementSeasonView(season: 'current' | 'previous') {
+    this.placementSeasonView = season;
   }
 
   setSelectedPlayers(names: string[]) {
@@ -268,5 +347,49 @@ export class TotalScoreDataComponent {
         },
       ],
     };
+  }
+
+  private buildPlacementHistory(
+    history: ReturnType<typeof calculatePlacementHistory>,
+    startPosition: number
+  ): ChartConfiguration<'line'>['data'] {
+    const names = Array.from(
+      new Set(
+        history.flatMap((snapshot) =>
+          snapshot.standings.map((standing) => standing.name)
+        )
+      )
+    ).sort((a, b) => a.localeCompare(b, 'sv'));
+
+    return {
+      labels: ['Start', ...history.map((snapshot) => `Omg ${snapshot.roundNumber}`)],
+      datasets: names.map((name) => {
+        const color = this.playerColor(name);
+        return {
+          label: name,
+          data: [
+            startPosition,
+            ...history.map(
+              (snapshot) =>
+                snapshot.standings.find((standing) => standing.name === name)
+                  ?.placement ?? startPosition
+            ),
+          ],
+          borderColor: color,
+          backgroundColor: color,
+          pointBackgroundColor: color,
+          spanGaps: false,
+        };
+      }),
+    };
+  }
+
+  private playerColor(name: string): string {
+    let hash = 0;
+    for (const character of name) {
+      hash = (hash * 31 + character.charCodeAt(0)) | 0;
+    }
+    const hue = Math.abs(hash) % 360;
+    return `hsl(${hue}, 62%, 40%)`;
   }
 }

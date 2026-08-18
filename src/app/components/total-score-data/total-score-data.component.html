@@ -13,29 +13,51 @@
         (change)="setViewMode($event.value)"
         aria-label="Välj datavy"
       >
-        <mat-button-toggle value="total">Totalt per omgång</mat-button-toggle>
-        <mat-button-toggle value="players">Spelare och form</mat-button-toggle>
+        <mat-button-toggle value="total">
+          <span class="toggle-label-desktop">Totalt per omgång</span>
+          <span class="toggle-label-mobile">Omgångar</span>
+        </mat-button-toggle>
+        <mat-button-toggle value="players">
+          <span class="toggle-label-desktop">Spelare och form</span>
+          <span class="toggle-label-mobile">Spelare</span>
+        </mat-button-toggle>
+        <mat-button-toggle value="placements">Placeringar</mat-button-toggle>
       </mat-button-toggle-group>
     </div>
 
     <ng-container *ngIf="!loading && !error; else state">
       <ng-container *ngIf="viewMode === 'total'">
         <div class="comparison" *ngIf="latestComparison as comparison">
-          <strong>Omgång {{ comparison.roundNumber }}:</strong>
-          {{ currentSeasonName }} fick {{ comparison.currentScore }} rätt.
-          <ng-container *ngIf="comparison.previousScore !== null; else noPreviousRound">
-            {{ previousSeasonName }} fick {{ comparison.previousScore }} rätt
-            <span
-              class="difference"
-              [class.positive]="comparison.difference! > 0"
-              [class.negative]="comparison.difference! < 0"
-            >
-              ({{ comparison.difference! > 0 ? '+' : '' }}{{ comparison.difference }}).
-            </span>
-          </ng-container>
-          <ng-template #noPreviousRound>
-            Motsvarande omgång saknas för föregående säsong.
-          </ng-template>
+          <strong class="comparison-heading">Omgång {{ comparison.roundNumber }}</strong>
+          <div class="season-results">
+            <div class="season-result current-result">
+              <span class="season-marker" aria-hidden="true"></span>
+              <span class="season-label">{{ currentSeasonName }}</span>
+              <strong>{{ comparison.currentScore }} rätt</strong>
+            </div>
+            <ng-container *ngIf="comparison.previousScore !== null; else noPreviousRound">
+              <div class="season-result previous-result">
+                <span class="season-marker" aria-hidden="true"></span>
+                <span class="season-label">{{ previousSeasonName }}</span>
+                <strong>{{ comparison.previousScore }} rätt</strong>
+              </div>
+              <div class="comparison-difference">
+                <span>Skillnad</span>
+                <strong
+                  class="difference"
+                  [class.positive]="comparison.difference! > 0"
+                  [class.negative]="comparison.difference! < 0"
+                >
+                  {{ comparison.difference! > 0 ? '+' : '' }}{{ comparison.difference }}
+                </strong>
+              </div>
+            </ng-container>
+            <ng-template #noPreviousRound>
+              <p class="missing-round">
+                Motsvarande omgång saknas för föregående säsong.
+              </p>
+            </ng-template>
+          </div>
         </div>
 
         <p class="empty" *ngIf="!latestComparison">
@@ -47,7 +69,7 @@
             baseChart
             [data]="chartData"
             [options]="chartOptions"
-            chartType="line"
+            [type]="'line'"
           ></canvas>
         </div>
       </ng-container>
@@ -98,7 +120,7 @@
             baseChart
             [data]="playerChartData"
             [options]="playerChartOptions"
-            chartType="bar"
+            [type]="'bar'"
           ></canvas>
         </div>
 
@@ -161,6 +183,59 @@
             </div>
           </article>
         </div>
+      </ng-container>
+
+      <ng-container *ngIf="viewMode === 'placements'">
+        <div class="form-definition">
+          Alla spelare börjar tillsammans vid Start. Därefter följer varje linje
+          spelarens placering efter varje omgång under vald säsong.
+          Plats 1 ligger högst.
+        </div>
+
+        <div class="placement-season-toggle" *ngIf="previousSeasonName">
+          <mat-button-toggle-group
+            [value]="placementSeasonView"
+            (change)="setPlacementSeasonView($event.value)"
+            aria-label="Välj säsong för placeringsgrafen"
+          >
+            <mat-button-toggle value="current">{{ currentSeasonName }}</mat-button-toggle>
+            <mat-button-toggle value="previous">{{ previousSeasonName }}</mat-button-toggle>
+          </mat-button-toggle-group>
+        </div>
+
+        <section class="placement-chart-card">
+          <h3>
+            Placering över tid ·
+            {{ placementSeasonView === 'current' ? currentSeasonName : previousSeasonName }}
+          </h3>
+          <div
+            class="placement-chart-container"
+            *ngIf="placementSeasonView === 'current' && placementChartData.labels?.length"
+          >
+            <canvas
+              baseChart
+              [data]="placementChartData"
+              [options]="placementChartOptions"
+              [type]="'line'"
+            ></canvas>
+          </div>
+          <div
+            class="placement-chart-container"
+            *ngIf="placementSeasonView === 'previous' && previousPlacementChartData.labels?.length"
+          >
+            <canvas
+              baseChart
+              [data]="previousPlacementChartData"
+              [options]="previousPlacementChartOptions"
+              [type]="'line'"
+            ></canvas>
+          </div>
+          <ng-container
+            *ngIf="placementSeasonView === 'current' ? !placementChartData.labels?.length : !previousPlacementChartData.labels?.length"
+          >
+            <p class="empty">Inga placeringar finns ännu.</p>
+          </ng-container>
+        </section>
       </ng-container>
     </ng-container>
 

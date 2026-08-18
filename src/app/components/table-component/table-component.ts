@@ -20,9 +20,9 @@ import {
   PlayerPerformanceComparison,
 } from '../../utils/player-performance';
 import {
-  calculatePlayerForecasts,
-  PlayerForecast,
-} from '../../utils/player-forecast';
+  calculatePlacementSummaries,
+  PlayerPlacementSummary,
+} from '../../utils/standings';
 
 @Component({
   selector: 'app-table-component',
@@ -33,14 +33,14 @@ import {
 export class TableComponent implements AfterViewInit {
     constructor(public api: ApiService, private dialog: MatDialog,public auth: AuthService) {}
   players = new MatTableDataSource<Player>([]);
-displayedColumns = ['name', 'totalMatches', 'score', 'avgRound', 'seasonForm', 'actions'];
+displayedColumns = ['name', 'score', 'placement', 'seasonForm', 'actions'];
   @ViewChild(MatSort) sort!: MatSort;
 topScore: number | null = null;
 topMatches: number | null = null;
 currentSeasonName = '';
 previousSeasonName = '';
 private seasonPerformanceByPlayer = new Map<string, PlayerPerformanceComparison>();
-private forecastByPlayer = new Map<string, PlayerForecast>();
+private placementByPlayer = new Map<string, PlayerPlacementSummary>();
 
   ngOnInit() {
   this.api.getSeasons().pipe(
@@ -67,9 +67,9 @@ private forecastByPlayer = new Map<string, PlayerForecast>();
     this.seasonPerformanceByPlayer = new Map(
       performance.map((player) => [player.name, player])
     );
-    const forecasts = calculatePlayerForecasts(currentRounds, previousRounds);
-    this.forecastByPlayer = new Map(
-      forecasts.map((forecast) => [forecast.name, forecast])
+    const placements = calculatePlacementSummaries(currentRounds);
+    this.placementByPlayer = new Map(
+      placements.map((placement) => [placement.name, placement])
     );
     this.players.data = this.withPlayerInsights(this.players.data);
   });
@@ -101,10 +101,8 @@ ngAfterViewInit(): void {
     switch (property) {
       case 'score':
         return Number(item.score) || 0;
-      case 'totalMatches':
-        return Number(item.total_matches) || 0;
-      case 'avgRound':
-        return Number(item.avg_score_per_round) || 0;
+      case 'placement':
+        return item.currentPlacement ?? Number.POSITIVE_INFINITY;
       case 'seasonForm':
         return item.seasonFormDifference ?? Number.NEGATIVE_INFINITY;
       default:
@@ -133,7 +131,7 @@ ngAfterViewInit(): void {
   private withPlayerInsights(players: Player[]): Player[] {
     return players.map((player) => {
       const performance = this.seasonPerformanceByPlayer.get(player.name);
-      const forecast = this.forecastByPlayer.get(player.name);
+      const placement = this.placementByPlayer.get(player.name);
       return {
         ...player,
         seasonFormDifference: performance?.seasonDifference ?? null,
@@ -143,11 +141,10 @@ ngAfterViewInit(): void {
         seasonCurrentPossible: performance?.currentPossible ?? 0,
         seasonPreviousScore: performance?.previousScore ?? 0,
         seasonPreviousPossible: performance?.previousPossible ?? 0,
-        predictedNextScore: forecast?.predictedNextScore ?? null,
-        predictedNextPossible: forecast?.predictedNextPossible ?? null,
-        projectedFinalScore: forecast?.projectedFinalScore ?? null,
-        projectedSeasonRounds: forecast?.projectedSeasonRounds ?? null,
-        predictionAccuracy: forecast?.predictionAccuracy ?? null,
+        currentPlacement: placement?.currentPlacement ?? null,
+        previousPlacement: placement?.previousPlacement ?? null,
+        placementChange: placement?.placementChange ?? null,
+        bestPlacement: placement?.bestPlacement ?? null,
       };
     });
   }
@@ -177,6 +174,7 @@ ngAfterViewInit(): void {
       width: '760px',
       maxWidth: '96vw',
       maxHeight: '92vh',
+      panelClass: 'player-profile-dialog',
       data: { player: p }
     });
   }
