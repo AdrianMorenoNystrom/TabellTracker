@@ -6,6 +6,8 @@ export interface Round {
   week: number;
   totalScore: number;
   players: Player[];
+  seasonId?: number;
+  seasonName?: string;
 }
 
 // DTOs for creating data

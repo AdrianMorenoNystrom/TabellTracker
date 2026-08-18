@@ -1,6 +1,8 @@
 ﻿<div class="header">
   <div class="title-group">
-    <h2 class="meta">Totalt antal omgångar: {{ rounds.length }}</h2>
+    <h2 class="meta">
+      Omgångar {{ currentSeasonName }}: {{ rounds.length }}
+    </h2>
   </div>
   <div class="controls">
     <button
@@ -45,6 +47,15 @@
             }"
           >
             <strong>{{ r.totalScore }}</strong>
+          </div>
+          <div class="round-winner" *ngIf="winnerNames(r) as winners">
+            <ng-container *ngIf="winners.length">
+              <mat-icon aria-hidden="true">emoji_events</mat-icon>
+              <div>
+                <span>{{ winners.length === 1 ? 'Omgångsvinnare' : 'Delad omgångsseger' }}</span>
+                <strong>{{ winners.join(', ') }}</strong>
+              </div>
+            </ng-container>
           </div>
         </mat-card-content>
         <mat-card-actions>

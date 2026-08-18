@@ -4,9 +4,35 @@
   justify-content: center;
 }
 
+:host {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.example-card,
+mat-card-content {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.example-card {
+  overflow: hidden;
+}
+
+.desktop-table-scroll {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+
 /* Desktop-table */
 .player-table {
   width: 100%;
+  min-width: 0;
+  table-layout: fixed;
   margin-top: 12px;
   border-radius: 12px;
   overflow: hidden;
@@ -15,6 +41,31 @@
 .player-table th {
   background-color: rgba(0, 66, 122, 0.08);
   font-weight: 600;
+}
+
+.player-table th,
+.player-table td {
+  padding-right: 0.45rem;
+  padding-left: 0.45rem;
+  overflow-wrap: anywhere;
+}
+
+.player-table .mat-column-name {
+  width: 23%;
+}
+
+.player-table .mat-column-score {
+  width: 14%;
+}
+
+.player-table .mat-column-placement {
+  width: 18%;
+}
+
+.player-table .mat-column-actions {
+  width: 2.5rem;
+  padding-right: 0.15rem;
+  padding-left: 0.15rem;
 }
 
 .player-table tr.mat-mdc-row:hover,
@@ -32,6 +83,86 @@
   text-align: right;
 }
 
+.placement-cell strong,
+.placement-cell .placement-change {
+  display: block;
+}
+
+.placement-change {
+  width: fit-content;
+  color: #56616c;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.placement-change.climbing {
+  color: #087a2f;
+}
+
+.placement-change.falling {
+  color: #b3261e;
+}
+
+.season-comparison-cell {
+  min-width: 0;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.accuracy-comparison {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.accuracy-comparison strong {
+  font-size: 1rem;
+}
+
+.accuracy-comparison span,
+.raw-score {
+  color: #56616c;
+  font-size: 0.72rem;
+}
+
+.raw-score {
+  display: block;
+  margin: 0.1rem 0 0.25rem;
+}
+
+.season-form {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 3.25rem;
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.78rem;
+}
+
+.form-positive {
+  color: #075c25;
+  background: #DDF4E4;
+}
+
+.form-negative {
+  color: #8e1d17;
+  background: #FBE2E0;
+}
+
+.form-steady {
+  color: #744b00;
+  background: #FFF1CD;
+}
+
+.form-transition,
+.form-empty {
+  color: #46515c;
+  background: #E7EBEF;
+}
+
 /* Mobil-lista – default gömd */
 .mobile-player-list {
   display: none;
@@ -40,7 +171,7 @@
 /* RESPONSIVE SWITCH */
 @media (max-width: 600px) {
   /* göm tabellen på mobil */
-  .player-table {
+  .desktop-table-scroll {
     display: none;
   }
 
@@ -96,6 +227,8 @@ box-shadow: inset 0 0px 20px 4px #fff, inset 0 4px 5px 0px #008912;  }
   .mobile-stats-row {
     display: flex;
     justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.75rem;
     font-size: 1rem;
   }
 
@@ -103,6 +236,28 @@ box-shadow: inset 0 0px 20px 4px #fff, inset 0 4px 5px 0px #008912;  }
     display: flex;
     flex-direction: column;
     gap: 2px;
+    min-width: calc(50% - 0.75rem);
+  }
+
+  .season-stat {
+    min-width: 100%;
+  }
+
+  .mobile-season-summary {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    column-gap: 0.75rem;
+  }
+
+  .mobile-season-summary .raw-score {
+    grid-column: 1;
+    margin-bottom: 0;
+  }
+
+  .mobile-season-summary .season-form {
+    grid-column: 2;
+    grid-row: 1 / span 2;
   }
 
   .stat .label {

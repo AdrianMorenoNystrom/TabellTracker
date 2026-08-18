@@ -1,18 +1,247 @@
 <mat-card class="data-card" appearance="outlined">
   <mat-card-header>
-    <mat-card-title>Totalt antal rätt över tid</mat-card-title>
+    <mat-card-title>Jämför säsonger</mat-card-title>
+    <mat-card-subtitle *ngIf="previousSeasonName">
+      {{ currentSeasonName }} jämfört med {{ previousSeasonName }}
+    </mat-card-subtitle>
   </mat-card-header>
 
   <mat-card-content>
-    <div class="chart-container" *ngIf="!loading; else skel">
-      <canvas baseChart
-              [data]="chartData"
-              [options]="chartOptions"
-              chartType="line">
-      </canvas>
+    <div class="view-toggle">
+      <mat-button-toggle-group
+        [value]="viewMode"
+        (change)="setViewMode($event.value)"
+        aria-label="Välj datavy"
+      >
+        <mat-button-toggle value="total">
+          <span class="toggle-label-desktop">Totalt per omgång</span>
+          <span class="toggle-label-mobile">Omgångar</span>
+        </mat-button-toggle>
+        <mat-button-toggle value="players">
+          <span class="toggle-label-desktop">Spelare och form</span>
+          <span class="toggle-label-mobile">Spelare</span>
+        </mat-button-toggle>
+        <mat-button-toggle value="placements">Placeringar</mat-button-toggle>
+      </mat-button-toggle-group>
     </div>
-    <ng-template #skel>
-      <p>Laddar…</p>
+
+    <ng-container *ngIf="!loading && !error; else state">
+      <ng-container *ngIf="viewMode === 'total'">
+        <div class="comparison" *ngIf="latestComparison as comparison">
+          <strong class="comparison-heading">Omgång {{ comparison.roundNumber }}</strong>
+          <div class="season-results">
+            <div class="season-result current-result">
+              <span class="season-marker" aria-hidden="true"></span>
+              <span class="season-label">{{ currentSeasonName }}</span>
+              <strong>{{ comparison.currentScore }} rätt</strong>
+            </div>
+            <ng-container *ngIf="comparison.previousScore !== null; else noPreviousRound">
+              <div class="season-result previous-result">
+                <span class="season-marker" aria-hidden="true"></span>
+                <span class="season-label">{{ previousSeasonName }}</span>
+                <strong>{{ comparison.previousScore }} rätt</strong>
+              </div>
+              <div class="comparison-difference">
+                <span>Skillnad</span>
+                <strong
+                  class="difference"
+                  [class.positive]="comparison.difference! > 0"
+                  [class.negative]="comparison.difference! < 0"
+                >
+                  {{ comparison.difference! > 0 ? '+' : '' }}{{ comparison.difference }}
+                </strong>
+              </div>
+            </ng-container>
+            <ng-template #noPreviousRound>
+              <p class="missing-round">
+                Motsvarande omgång saknas för föregående säsong.
+              </p>
+            </ng-template>
+          </div>
+        </div>
+
+        <p class="empty" *ngIf="!latestComparison">
+          Jämförelsen visas när den första omgången för {{ currentSeasonName }} har spelats.
+        </p>
+
+        <div class="chart-container" *ngIf="latestComparison">
+          <canvas
+            baseChart
+            [data]="chartData"
+            [options]="chartOptions"
+            [type]="'line'"
+          ></canvas>
+        </div>
+      </ng-container>
+
+      <ng-container *ngIf="viewMode === 'players'">
+        <div class="form-definition">
+          <strong>Form</strong> är träffprocenten under spelarens senaste
+          {{ formWindowSize }} spelade omgångar. Den jämförs med samma tidpunkt
+          {{ previousSeasonName }}. En skillnad på minst {{ formThresholdPoints }}%
+          räknas som över- eller underprestation.
+        </div>
+
+        <div class="player-picker" *ngIf="playerPerformance.length">
+          <div class="picker-actions">
+            <span>Jämför spelare</span>
+            <button mat-button type="button" (click)="selectAllPlayers()">Alla</button>
+            <button mat-button type="button" (click)="clearPlayerSelection()">Ingen</button>
+          </div>
+
+          <mat-button-toggle-group
+            multiple
+            [value]="selectedPlayerNames"
+            (change)="setSelectedPlayers($event.value)"
+            aria-label="Välj spelare att jämföra"
+          >
+            <mat-button-toggle
+              *ngFor="let player of playerPerformance"
+              [value]="player.name"
+            >
+              {{ player.name }}
+            </mat-button-toggle>
+          </mat-button-toggle-group>
+        </div>
+
+        <p class="empty" *ngIf="!selectedPlayerNames.length">
+          Välj minst en spelare för att visa jämförelsen.
+        </p>
+
+        <p class="empty" *ngIf="selectedPlayerNames.length && !latestComparison">
+          Spelarformen visas när den första omgången för {{ currentSeasonName }} har spelats.
+        </p>
+
+        <div
+          class="chart-container player-chart"
+          *ngIf="selectedPlayerNames.length && latestComparison"
+        >
+          <canvas
+            baseChart
+            [data]="playerChartData"
+            [options]="playerChartOptions"
+            [type]="'bar'"
+          ></canvas>
+        </div>
+
+        <div class="performance-grid" *ngIf="selectedPlayerPerformance.length">
+          <article
+            class="performance-card"
+            *ngFor="let performance of selectedPlayerPerformance"
+            [ngClass]="performance.status"
+          >
+            <div class="performance-header">
+              <h3>{{ performance.name }}</h3>
+              <span class="status">{{ statusLabel(performance.status) }}</span>
+            </div>
+
+            <div class="metric-grid">
+              <div class="metric">
+                <span class="label">Säsong {{ currentSeasonName }}</span>
+                <strong>
+                  {{ performance.currentSeasonAccuracy == null
+                    ? '–'
+                    : (performance.currentSeasonAccuracy | number:'1.0-1') + '%' }}
+                </strong>
+                <small>
+                  {{ performance.currentScore }}/{{ performance.currentPossible }} rätt
+                  · {{ performance.currentRounds }} omgångar
+                </small>
+              </div>
+
+              <div class="metric">
+                <span class="label">Samma läge {{ previousSeasonName }}</span>
+                <strong>
+                  {{ performance.previousSeasonAccuracy == null
+                    ? '–'
+                    : (performance.previousSeasonAccuracy | number:'1.0-1') + '%' }}
+                </strong>
+                <small>
+                  {{ performance.previousScore }}/{{ performance.previousPossible }} rätt
+                  · {{ performance.previousRounds }} omgångar
+                </small>
+              </div>
+
+              <div class="metric">
+                <span class="label">Form senaste {{ formWindowSize }}</span>
+                <strong>
+                  {{ performance.currentFormAccuracy == null
+                    ? '–'
+                    : (performance.currentFormAccuracy | number:'1.0-1') + '%' }}
+                </strong>
+              </div>
+
+              <div class="metric delta-metric">
+                <span class="label">Form mot förra säsongen</span>
+                <strong>
+                  <ng-container *ngIf="performance.formDifference !== null; else noDifference">
+                    {{ performance.formDifference > 0 ? '+' : '' }}{{ performance.formDifference | number:'1.0-1' }}%
+                  </ng-container>
+                  <ng-template #noDifference>–</ng-template>
+                </strong>
+              </div>
+            </div>
+          </article>
+        </div>
+      </ng-container>
+
+      <ng-container *ngIf="viewMode === 'placements'">
+        <div class="form-definition">
+          Alla spelare börjar tillsammans vid Start. Därefter följer varje linje
+          spelarens placering efter varje omgång under vald säsong.
+          Plats 1 ligger högst.
+        </div>
+
+        <div class="placement-season-toggle" *ngIf="previousSeasonName">
+          <mat-button-toggle-group
+            [value]="placementSeasonView"
+            (change)="setPlacementSeasonView($event.value)"
+            aria-label="Välj säsong för placeringsgrafen"
+          >
+            <mat-button-toggle value="current">{{ currentSeasonName }}</mat-button-toggle>
+            <mat-button-toggle value="previous">{{ previousSeasonName }}</mat-button-toggle>
+          </mat-button-toggle-group>
+        </div>
+
+        <section class="placement-chart-card">
+          <h3>
+            Placering över tid ·
+            {{ placementSeasonView === 'current' ? currentSeasonName : previousSeasonName }}
+          </h3>
+          <div
+            class="placement-chart-container"
+            *ngIf="placementSeasonView === 'current' && placementChartData.labels?.length"
+          >
+            <canvas
+              baseChart
+              [data]="placementChartData"
+              [options]="placementChartOptions"
+              [type]="'line'"
+            ></canvas>
+          </div>
+          <div
+            class="placement-chart-container"
+            *ngIf="placementSeasonView === 'previous' && previousPlacementChartData.labels?.length"
+          >
+            <canvas
+              baseChart
+              [data]="previousPlacementChartData"
+              [options]="previousPlacementChartOptions"
+              [type]="'line'"
+            ></canvas>
+          </div>
+          <ng-container
+            *ngIf="placementSeasonView === 'current' ? !placementChartData.labels?.length : !previousPlacementChartData.labels?.length"
+          >
+            <p class="empty">Inga placeringar finns ännu.</p>
+          </ng-container>
+        </section>
+      </ng-container>
+    </ng-container>
+
+    <ng-template #state>
+      <p *ngIf="loading">Laddar…</p>
+      <p *ngIf="error" class="error">{{ error }}</p>
     </ng-template>
   </mat-card-content>
 </mat-card>

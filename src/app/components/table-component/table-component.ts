@@ -11,24 +11,69 @@ import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { PlayerHistoryDialogComponent } from '../player-history-dialog/player-history-dialog.component';
-import { DecimalPipe, NgIf, NgFor, AsyncPipe } from '@angular/common';
+import { DecimalPipe, NgIf, NgFor, AsyncPipe, NgClass } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
+import { combineLatest, of, switchMap } from 'rxjs';
+import { Round } from '../../interfaces/round';
+import {
+  calculatePlayerPerformance,
+  PlayerPerformanceComparison,
+} from '../../utils/player-performance';
+import {
+  calculatePlacementSummaries,
+  PlayerPlacementSummary,
+} from '../../utils/standings';
 
 @Component({
   selector: 'app-table-component',
-  imports: [MatCardModule,MatButtonModule,MatIconModule, MatTableModule, MatSortModule, MatFormFieldModule, MatInputModule, MatDialogModule,NgIf,DecimalPipe,NgFor,AsyncPipe],
+  imports: [MatCardModule,MatButtonModule,MatIconModule, MatTableModule, MatSortModule, MatFormFieldModule, MatInputModule, MatDialogModule,NgIf,DecimalPipe,NgFor,AsyncPipe,NgClass],
   templateUrl: './table-component.html',
   styleUrl: './table-component.scss'
 })
 export class TableComponent implements AfterViewInit {
     constructor(public api: ApiService, private dialog: MatDialog,public auth: AuthService) {}
   players = new MatTableDataSource<Player>([]);
-displayedColumns = ['name', 'totalMatches', 'score', 'avgRound', 'actions'];
+displayedColumns = ['name', 'score', 'placement', 'seasonForm', 'actions'];
   @ViewChild(MatSort) sort!: MatSort;
 topScore: number | null = null;
 topMatches: number | null = null;
+currentSeasonName = '';
+previousSeasonName = '';
+private seasonPerformanceByPlayer = new Map<string, PlayerPerformanceComparison>();
+private placementByPlayer = new Map<string, PlayerPlacementSummary>();
 
   ngOnInit() {
+  this.api.getSeasons().pipe(
+    switchMap((seasons) => {
+      const current = seasons.find((season) => season.isCurrent);
+      const previous = seasons
+        .filter((season) => current && season.startYear < current.startYear)
+        .sort((a, b) => b.startYear - a.startYear)[0];
+
+      this.currentSeasonName = current?.name ?? '';
+      this.previousSeasonName = previous?.name ?? '';
+
+      if (!current) {
+        return of({ currentRounds: [] as Round[], previousRounds: [] as Round[] });
+      }
+
+      return combineLatest({
+        currentRounds: this.api.watchRounds(),
+        previousRounds: previous ? this.api.getRounds(previous.id) : of([] as Round[]),
+      });
+    })
+  ).subscribe(({ currentRounds, previousRounds }) => {
+    const performance = calculatePlayerPerformance(currentRounds, previousRounds);
+    this.seasonPerformanceByPlayer = new Map(
+      performance.map((player) => [player.name, player])
+    );
+    const placements = calculatePlacementSummaries(currentRounds);
+    this.placementByPlayer = new Map(
+      placements.map((placement) => [placement.name, placement])
+    );
+    this.players.data = this.withPlayerInsights(this.players.data);
+  });
+
   this.api.watchPlayers().subscribe(p => {
     const arr = (p ?? []).slice().sort((a, b) => {
       // 1) mest poäng vinner
@@ -39,7 +84,7 @@ topMatches: number | null = null;
       return aMatches - bMatches;
     });
 
-    this.players.data = arr;
+    this.players.data = this.withPlayerInsights(arr);
 
     if (arr.length) {
       this.topScore = arr[0].score;
@@ -56,10 +101,10 @@ ngAfterViewInit(): void {
     switch (property) {
       case 'score':
         return Number(item.score) || 0;
-      case 'totalMatches':
-        return Number(item.total_matches) || 0;
-      case 'avgRound':
-        return Number(item.avg_score_per_round) || 0;
+      case 'placement':
+        return item.currentPlacement ?? Number.POSITIVE_INFINITY;
+      case 'seasonForm':
+        return item.seasonFormDifference ?? Number.NEGATIVE_INFINITY;
       default:
         return (item as any)[property];
     }
@@ -71,7 +116,36 @@ ngAfterViewInit(): void {
   loadPlayers() {
     this.api.getPlayers().subscribe(p => {
       const arr = (p ?? []).slice().sort((a, b) => b.score - a.score);
-      this.players.data = arr;
+      this.players.data = this.withPlayerInsights(arr);
+    });
+  }
+
+  seasonFormClass(value: number | null | undefined): string {
+    if (value == null) return 'form-empty';
+    if (value >= 5) return 'form-positive';
+    if (value <= -5) return 'form-negative';
+    if (Math.abs(value) <= 3) return 'form-steady';
+    return 'form-transition';
+  }
+
+  private withPlayerInsights(players: Player[]): Player[] {
+    return players.map((player) => {
+      const performance = this.seasonPerformanceByPlayer.get(player.name);
+      const placement = this.placementByPlayer.get(player.name);
+      return {
+        ...player,
+        seasonFormDifference: performance?.seasonDifference ?? null,
+        seasonCurrentAccuracy: performance?.currentSeasonAccuracy ?? null,
+        seasonPreviousAccuracy: performance?.previousSeasonAccuracy ?? null,
+        seasonCurrentScore: performance?.currentScore ?? 0,
+        seasonCurrentPossible: performance?.currentPossible ?? 0,
+        seasonPreviousScore: performance?.previousScore ?? 0,
+        seasonPreviousPossible: performance?.previousPossible ?? 0,
+        currentPlacement: placement?.currentPlacement ?? null,
+        previousPlacement: placement?.previousPlacement ?? null,
+        placementChange: placement?.placementChange ?? null,
+        bestPlacement: placement?.bestPlacement ?? null,
+      };
     });
   }
 
@@ -97,7 +171,10 @@ ngAfterViewInit(): void {
 
   openHistory(p: Player) {
     this.dialog.open(PlayerHistoryDialogComponent, {
-      width: '520px',
+      width: '760px',
+      maxWidth: '96vw',
+      maxHeight: '92vh',
+      panelClass: 'player-profile-dialog',
       data: { player: p }
     });
   }
