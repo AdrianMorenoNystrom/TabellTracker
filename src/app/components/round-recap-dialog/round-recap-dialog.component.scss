@@ -1,0 +1,69 @@
+.recap-content {
+  width: min(620px, 82vw);
+}
+
+.description {
+  margin: 0 0 1rem;
+  color: rgba(0, 0, 0, 0.65);
+  line-height: 1.45;
+}
+
+.image-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.75rem;
+}
+
+.image-section > button {
+  align-self: flex-end;
+}
+
+.image-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.image-heading strong {
+  color: #001932;
+  font-size: 1.05rem;
+}
+
+.image-heading span {
+  color: rgba(0, 0, 0, 0.58);
+  font-size: 0.85rem;
+}
+
+.canvas-shell {
+  overflow: hidden;
+  border-radius: 0.75rem;
+  background: #001932;
+  box-shadow: 0 0.8rem 2rem rgba(0, 25, 50, 0.2);
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 5;
+}
+
+mat-dialog-actions {
+  padding: 0.75rem 1.5rem 1.25rem;
+}
+
+@media (max-width: 600px) {
+  .recap-content {
+    width: auto;
+    padding-inline: 1rem;
+  }
+
+  .description {
+    font-size: 0.85rem;
+  }
+
+  mat-dialog-actions {
+    padding-inline: 1rem;
+  }
+}
