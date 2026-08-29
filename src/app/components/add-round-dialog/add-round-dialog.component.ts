@@ -198,7 +198,14 @@ export class AddRoundDialogComponent {
           roundNumber: payload.roundNumber,
           week: payload.week,
           totalScore,
-          players: []
+          players: payload.players.map((player) => ({
+            id: 0,
+            name: player.name,
+            score: player.score,
+            total_matches: player.matchesPicked ?? 3,
+            avg_score_per_round: player.score,
+            matchesPicked: player.matchesPicked ?? 3,
+          }))
         };
         this.ref.close({ round: created });
       },

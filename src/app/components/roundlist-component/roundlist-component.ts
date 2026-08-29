@@ -12,6 +12,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatFormField, MatLabel, MatSelect, MatSelectModule } from '@angular/material/select';
 import { AuthService } from '../../services/auth.service';
 import { getRoundWinners } from '../../utils/standings';
+import { RoundRecapDialogComponent } from '../round-recap-dialog/round-recap-dialog.component';
 
 @Component({
   selector: 'app-roundlist-component',
@@ -85,9 +86,26 @@ onSortChange(mode: string): void {
 
     ref.afterClosed().subscribe((result: { round?: Round } | undefined) => {
       if (result?.round) {
-        this.rounds = [result.round, ...this.rounds];
+        const createdRound = {
+          ...result.round,
+          seasonName: this.currentSeasonName,
+        };
+        this.rounds = [createdRound, ...this.rounds.filter((round) => round.id !== createdRound.id)];
         this.applySort();
+        this.openRoundRecap(createdRound);
       }
+    });
+  }
+
+  openRoundRecap(round: Round): void {
+    this.dialog.open(RoundRecapDialogComponent, {
+      width: '680px',
+      maxWidth: '96vw',
+      data: {
+        round,
+        seasonName: round.seasonName || this.currentSeasonName,
+        seasonRounds: this.rounds,
+      },
     });
   }
 

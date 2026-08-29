@@ -1,0 +1,46 @@
+<h2 mat-dialog-title>Omgångsbild</h2>
+
+<mat-dialog-content class="recap-content">
+  <p class="description">
+    Bilden skapas lokalt från de sparade resultaten. Kontrollera den och ladda sedan ner den som PNG.
+  </p>
+  <section class="image-section">
+    <div class="image-heading">
+      <strong>1. Omgången</strong>
+      <span>Vinnare och resultat</span>
+    </div>
+    <div class="canvas-shell">
+      <canvas
+        #recapCanvas
+        role="img"
+        [attr.aria-label]="'Resultatbild för omgång ' + data.round.roundNumber"
+      ></canvas>
+    </div>
+    <button mat-stroked-button color="primary" type="button" (click)="downloadRound()">
+      <mat-icon>download</mat-icon>
+      Ladda ner omgången
+    </button>
+  </section>
+
+  <section class="image-section">
+    <div class="image-heading">
+      <strong>2. Säsongsläget</strong>
+      <span>Tabell, form och utveckling efter omgången</span>
+    </div>
+    <div class="canvas-shell">
+      <canvas
+        #seasonCanvas
+        role="img"
+        [attr.aria-label]="'Säsongsstatistik efter omgång ' + data.round.roundNumber"
+      ></canvas>
+    </div>
+    <button mat-stroked-button color="primary" type="button" (click)="downloadSeason()">
+      <mat-icon>download</mat-icon>
+      Ladda ner säsongsläget
+    </button>
+  </section>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Stäng</button>
+</mat-dialog-actions>
