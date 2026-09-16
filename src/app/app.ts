@@ -1,5 +1,5 @@
 ﻿import { Component, signal, OnInit } from '@angular/core';
-import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
+import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -11,8 +11,8 @@ import { MatIcon } from '@angular/material/icon';
 import { AuthService } from './services/auth.service';
 import { avatarLetter } from './utils/avatar';
 
-import { Observable } from 'rxjs';
-import { map, startWith } from 'rxjs/operators';
+import { combineLatest, Observable } from 'rxjs';
+import { filter, map, startWith } from 'rxjs/operators';
 import {MatMenuModule} from '@angular/material/menu';
 
 @Component({
@@ -42,10 +42,17 @@ export class App implements OnInit {
 
   ngOnInit() {
     this.isLoggedIn$ = this.auth.isLoggedIn$();
-    this.isLoggedIn$.pipe(takeUntilDestroyed(this.destroy)).subscribe(member => {
-      if (!member && this.auth.isReadySnapshot() && !this.router.url.startsWith('/join') && !this.router.url.startsWith('/admin/login')) {
-        void this.router.navigateByUrl('/join');
-      }
+    combineLatest([
+      this.auth.isReady$(), this.isLoggedIn$,
+      this.router.events.pipe(filter(event => event instanceof NavigationEnd), startWith(null)),
+    ]).pipe(takeUntilDestroyed(this.destroy)).subscribe(([ready, member]) => {
+      // Guards handle the initial route. router.url is still '/' while an invite
+      // page loads, so redirecting at that point would discard its token.
+      if (!ready || member || !this.router.navigated) return;
+      const destination = this.router.getCurrentNavigation()?.extractedUrl.toString() ?? this.router.url;
+      const path = destination.split(/[?#]/, 1)[0];
+      if (path === '/join' || path.startsWith('/join/') || path === '/admin/login') return;
+      void this.router.navigateByUrl('/join');
     });
 
     this.displayLetter$ = this.auth.getDisplayName$().pipe(
