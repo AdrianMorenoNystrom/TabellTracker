@@ -1,111 +1,118 @@
-<div *ngIf="loading" class="loading-wrapper">
-  <mat-spinner></mat-spinner>
-</div>
-<mat-card class="tip-card" appearance="outlined" *ngIf="!loading;">
-  <mat-card-header class="header">
-    <mat-card-title class="title">Stryktipset – Vecka {{ thisWeek }}</mat-card-title>
-  </mat-card-header>
-
-  <mat-card-content class="content">
-    <div class="status-row">
-      <mat-chip-listbox>
-        <mat-chip *ngFor="let s of status" [class.ok]="s.submitted" [class.no]="!s.submitted">
-          {{ s.submitted ? '✅' : '⏳' }} {{ s.name }}
-        </mat-chip>
-      </mat-chip-listbox>
+<main class="coupon">
+  <header>
+    <div><p class="eyebrow">Stryktipset · {{ connection }}</p><h1>Veckans kupong</h1></div>
+    <button class="secondary" (click)="refresh()" [disabled]="refreshing || now < refreshAfter">
+      {{ refreshing ? 'Hämtar…' : 'Uppdatera' }}
+    </button>
+  </header>
+  @if (loading) { <p role="status">Laddar kupongen…</p> }
+  @if (error) { <p class="error" role="alert">{{ error }}</p> }
+  <p class="save-status" aria-live="polite">{{ saving ? 'Sparar…' : drafts.size ? 'Osparat val' : notice }}</p>
+  @if (draw) {
+    <div class="draw-meta">
+      <label>Omgång <select [(ngModel)]="selected" (ngModelChange)="selectDraw()" [disabled]="saving || drafts.size > 0">
+        @for (d of draws; track d.draw_number) { <option [ngValue]="d.draw_number">{{ d.round_number }} · {{ time(d.reg_close_time) }}</option> }
+      </select></label>
+      <span>Spelstopp {{ time(draw.reg_close_time) }}</span>
     </div>
-
-    <div class="matches">
-      <div class="match" *ngFor="let m of matches">
-        <div class="match-info">
-
-          <div class="main">
-                      <div class="no" [class.picked-by-other]="(isTakenOutcome(m.matchNo,'1') || isTakenOutcome(m.matchNo,'X') || isTakenOutcome(m.matchNo,'2'))  ">
-            #{{ m.matchNo }}
-                                    <div class="avatars" *ngIf="picksByMatch.get(m.matchNo)?.length">
-              <app-avatar-chip
-                *ngFor="let p of picksByMatch.get(m.matchNo)!"
-                [displayName]="p.name"
-                [userId]="p.userId">
-              </app-avatar-chip>
+    @if (locked) { <p class="banner">{{ draw.status === 'settled' ? 'Rättad · tabellen är uppdaterad' : 'Spelstopp · inväntar rättning' }}</p> }
+    @if (draw.status === 'draft' && !locked) { <p class="banner">Kupongen har inte öppnat ännu.</p> }
+    @if (stale) { <p class="banner">Senast sparade uppgifter visas. Senaste hämtning: {{ time(draw.retrieved_at) }}.</p> }
+    <section class="team-status" aria-labelledby="team-status-title">
+      <h2 id="team-status-title">Lagets rader</h2>
+      <div class="player-statuses" aria-live="polite">
+        @for (player of players; track player.id) {
+          @let state = rowState(player.id);
+          <div class="player-status" [style.--player-color]="playerColor(player.id)">
+            <div class="player-heading">
+              <strong>{{ player.name }}</strong>
+              @if (player.id === draw.four_player_id) { <span class="four-badge">4 matcher</span> }
             </div>
+            <span class="row-state" [class.complete]="state === 'Rad klar ✓'">{{ state }}</span>
+            @if (adminMode && auth.isUserAdminSnapshot() && locked) {
+              <button class="text-button" (click)="beginCorrection(player.id)">Korrigera tips</button>
+            }
           </div>
-
-            <div class="teams">
-              <div class="home">{{ m.home }}</div>
-              <div class="vs">–</div>
-              <div class="away">{{ m.away }}</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="pick-row">
-          <div class="game">
-            <button
-              class="pick"
-              [class.active]="isActive(m.matchNo,'1')"
-              [class.picked-by-other]="!isActive(m.matchNo,'1') && isTakenOutcome(m.matchNo,'1')"
-              [disabled]="isDisabled(m.matchNo,'1')"
-              (click)="toggleOutcome(m.matchNo,'1')"
-            >1</button>
-            <div class="percent">{{ m.percent?.['1'] }}%</div>
-            <mat-divider></mat-divider>
-            <div class="odds">{{ m.odds?.['1'] }}</div>
-          </div>
-
-          <div class="game">
-            <button
-              class="pick"
-              [class.active]="isActive(m.matchNo,'X')"
-              [class.picked-by-other]="!isActive(m.matchNo,'X') && isTakenOutcome(m.matchNo,'X')"
-              [disabled]="isDisabled(m.matchNo,'X')"
-              (click)="toggleOutcome(m.matchNo,'X')"
-            >X</button>
-            <div class="percent">{{ m.percent?.['X'] }}%</div>
-            <mat-divider></mat-divider>
-            <div class="odds">{{ m.odds?.['X'] }}</div>
-          </div>
-
-          <div class="game">
-            <button
-              class="pick"
-              [class.active]="isActive(m.matchNo,'2')"
-              [class.picked-by-other]="!isActive(m.matchNo,'2') && isTakenOutcome(m.matchNo,'2')"
-              [disabled]="isDisabled(m.matchNo,'2')"
-              (click)="toggleOutcome(m.matchNo,'2')"
-            >2</button>
-            <div class="percent">{{ m.percent?.['2'] }}%</div>
-            <mat-divider></mat-divider>
-            <div class="odds">{{ m.odds?.['2'] }}</div>
-          </div>
-        </div>
+        }
       </div>
+    </section>
+    @if (auth.isUserAdminSnapshot()) {
+      <label class="admin-toggle"><input type="checkbox" [(ngModel)]="adminMode"> Administrera tips och resultat</label>
+      @if (adminMode) {
+        <label>Välj lediga matcher åt <select [(ngModel)]="adminPlayer" [disabled]="saving || drafts.size > 0">
+          <option [ngValue]="null">Mig själv</option>
+          @for (player of players; track player.id) { <option [ngValue]="player.id">{{ player.name }}</option> }
+        </select></label>
+      }
+    }
+    <div class="matches">
+      @for (event of events; track event.event_number) {
+        <article class="match" [class.mine]="owner(event) === auth.identity?.player_id"
+          [class.claimed]="owner(event) !== null" [style.--player-color]="playerColor(owner(event))">
+          <div class="match-title"><span class="number">{{ event.event_number }}</span>
+            <div><h2>{{ event.home_team }} <span>–</span> {{ event.away_team }}</h2>
+              <small>{{ event.league }} · {{ time(event.kickoff) }}{{ event.cancelled ? ' · Inställd' : '' }}</small></div>
+          </div>
+          <div class="owner"><span class="player-name" [class.available]="owner(event) === null">{{ name(owner(event)) }}</span>
+            <strong>{{ pick(event) || 'Ej tippad' }}</strong></div>
+          <div class="data-row"><span>Tecken</span>@for (sign of signs; track sign) { <b>{{ sign }}</b> }</div>
+          <div class="data-row"><span>Svenska Folket</span>@for (sign of signs; track sign; let i = $index) {
+            <span>{{ event.crowd ? (event.crowd[i] * 100 | number:'1.0-0') + '%' : '–' }}</span>
+          }</div>
+          <div class="data-row"><span>Svenska Spels odds</span>@for (sign of signs; track sign; let i = $index) {
+            <span>{{ event.odds ? (event.odds[i] | number:'1.2-2') : '–' }}</span>
+          }</div>
+          @if ((event.odds && event.odds_retrieved_at !== draw.retrieved_at) || (event.crowd && event.crowd_retrieved_at !== draw.retrieved_at)) {
+            <small>Senast giltiga uppgifter · streck {{ time(event.crowd_retrieved_at) }} · odds {{ time(event.odds_retrieved_at) }}</small>
+          }
+          <div class="data-row tips"><span>Tips</span>
+            @for (sign of signs; track sign) {
+              <button [class.chosen]="pick(event).includes(sign)" [disabled]="disabled(event,sign)"
+                [attr.aria-pressed]="pick(event).includes(sign)" [attr.aria-label]="'Match ' + event.event_number + ', tecken ' + sign"
+                (click)="toggle(event,sign)">{{ sign }}</button>
+            }
+          </div>
+          @if (drafts.has(event.event_number)) { <p role="status">Osparat val</p> }
+          @if (pending.has(event.event_number)) { <small>Sparar…</small> }
+          @if (pick(event) && canEdit(event)) { <button class="text-button" (click)="toggle(event,'')">Rensa</button> }
+          @if (outcome(event); as result) {
+            <p class="result" [class.correct]="correct(event)">Resultat {{ result.outcome }}
+              @if (result.home_score !== null && result.away_score !== null) { · {{ result.home_score }}–{{ result.away_score }} }
+              · {{ correct(event) ? 'Rätt ✓' : (pick(event) ? 'Fel' : 'Tips saknas') }}
+            </p>
+          }
+          @if (adminMode && auth.isUserAdminSnapshot() && locked) {
+            <button class="text-button" (click)="correctingResult = event.event_number">Korrigera resultat</button>
+          }
+        </article>
+      }
     </div>
-
-   <div class="submit-row">
-  <button mat-raised-button
-          class="submit"
-          [class.ready]="canSubmit()"
-          [disabled]="!canSubmit() || saving"
-          (click)="lockInRow()">
-    {{ saving ? 'Sparar…' : 'Lås in rad' }}
-  </button>
-
-  <div class="error" *ngIf="saveError">{{ saveError }}</div>
-</div>
-
-<!-- Sticky snapshot (alla skärmar) -->
-<div class="sticky-snapshot">
-  <button class="snapshot-button"
-          mat-stroked-button
-          (click)="openSnapshot()">
-    Översikt
-  </button>
-</div>
-
-  </mat-card-content>
-</mat-card>
-
-<ng-template #skel>
-  <p>Laddar…</p>
-</ng-template>
+    @if (correctingPlayer !== null) {
+      <section class="correction"><h2>Korrigera {{ name(correctingPlayer) }}s tips</h2>
+        @for (event of events; track event.event_number) {
+          @if (owner(event) === correctingPlayer) {
+            <div class="data-row tips"><span>Match {{ event.event_number }}</span>
+              @for (sign of signs; track sign) {
+                <button [class.chosen]="(correction[event.event_number] || '').includes(sign)"
+                  [attr.aria-pressed]="(correction[event.event_number] || '').includes(sign)"
+                  [attr.aria-label]="'Korrigera match ' + event.event_number + ', tecken ' + sign"
+                  [disabled]="!(correction[event.event_number] || '').includes(sign) && (correction[event.event_number] || '').length >= 2"
+                  (click)="toggleCorrection(event.event_number,sign)">{{ sign }}</button>
+              }
+            </div>
+          }
+        }
+        <button (click)="saveCorrection()">Spara korrigeringen</button>
+        <button class="secondary" (click)="correctingPlayer = null">Avbryt</button>
+      </section>
+    }
+    @if (correctingResult !== null) {
+      <section class="correction"><h2>Korrigera resultat för match {{ correctingResult }}</h2>
+        <label>Officiellt tecken <select [(ngModel)]="resultSign">@for (sign of signs; track sign) { <option>{{ sign }}</option> }</select></label>
+        <label>Orsak <input [(ngModel)]="resultReason" placeholder="Ange källa och orsak till korrigeringen"></label>
+        <button (click)="saveResult()" [disabled]="resultReason.trim().length < 5">Spara resultat</button>
+        <button class="secondary" (click)="correctingResult = null">Avbryt</button>
+      </section>
+    }
+  } @else if (!loading) { <p>Ingen kupong ännu.</p> }
+</main>

@@ -1,0 +1,6 @@
+project_id = "stryktipstabellen"
+
+[functions.stryktipset-sync]
+# The handler verifies user JWTs with Auth, or the separate scheduler secret.
+# This also supports projects using publishable keys and asymmetric JWT signing.
+verify_jwt = false

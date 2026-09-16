@@ -9,7 +9,7 @@
         [routerLinkActiveOptions]="{ exact: true }"
                 [style]="'border-radius:0.3rem;'"
       >
-        Hem
+        Kupong
       </button>
 
       <button
@@ -23,17 +23,20 @@
 
             <button
         mat-raised-button
-        routerLink="/matches"
+        routerLink="/tabell"
         routerLinkActive="active-link"
                 [style]="'border-radius:0.3rem;'"
       >
-        Matcher
+        Tabell
       </button>
+
+      <button mat-button routerLink="/admin" *ngIf="auth.isUserAdminSnapshot()">Admin</button>
 
 <button
   matMiniFab
   color="secondary"
   (click)="openLogin()"
+  aria-label="Logga in som admin"
   *ngIf="!(isLoggedIn$ | async)"
 >
   <mat-icon >login</mat-icon>

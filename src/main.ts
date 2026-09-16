@@ -5,7 +5,8 @@ import { inject } from '@vercel/analytics';
 import { environment } from './environments/environment';
 
 if (environment.production) {
-  inject();
+  // Personal invite tokens must never be sent to analytics.
+  inject({ beforeSend: event => new URL(event.url).pathname.startsWith('/join') ? null : event });
 }
 
 bootstrapApplication(App, appConfig)

@@ -1,0 +1,1530 @@
+{
+    "enums": [
+    ],
+    "views": [
+        {
+            "view_name": "player_stats",
+            "definition": " SELECT p.id,\n    p.name,\n    COALESCE(sum(rp.score), (0)::bigint) AS score,\n    COALESCE(sum(rp.matches_picked), (0)::bigint) AS total_matches,\n    count(rp.round_id) AS rounds_played,\n        CASE\n            WHEN (count(rp.round_id) > 0) THEN round(((sum(rp.score))::numeric / (count(rp.round_id))::numeric), 2)\n            ELSE (0)::numeric\n        END AS avg_score_per_round\n   FROM (players p\n     LEFT JOIN round_players rp ON ((rp.player_id = p.id)))\n  GROUP BY p.id, p.name;"
+        },
+        {
+            "view_name": "player_stats_by_season",
+            "definition": " WITH stats AS (\n         SELECT r.season_id,\n            rp.player_id,\n            COALESCE(sum(rp.score), (0)::bigint) AS score,\n            COALESCE(sum(rp.matches_picked), (0)::bigint) AS total_matches,\n            count(rp.round_id) AS rounds_played\n           FROM (round_players rp\n             JOIN rounds r ON ((r.id = rp.round_id)))\n          GROUP BY r.season_id, rp.player_id\n        )\n SELECT s.id AS season_id,\n    s.name AS season_name,\n    s.start_year,\n    s.end_year,\n    s.is_current,\n    p.id,\n    p.name,\n    COALESCE(st.score, (0)::bigint) AS score,\n    COALESCE(st.total_matches, (0)::bigint) AS total_matches,\n    COALESCE(st.rounds_played, (0)::bigint) AS rounds_played,\n        CASE\n            WHEN (COALESCE(st.rounds_played, (0)::bigint) = 0) THEN (0)::numeric\n            ELSE round(((st.score)::numeric / (st.rounds_played)::numeric), 2)\n        END AS avg_score_per_round\n   FROM ((seasons s\n     CROSS JOIN players p)\n     LEFT JOIN stats st ON (((st.season_id = s.id) AND (st.player_id = p.id))));"
+        }
+    ],
+    "tables": [
+        {
+            "table": "articles",
+            "schema": "public",
+            "rls_forced": false,
+            "rls_enabled": true
+        },
+        {
+            "table": "editors",
+            "schema": "public",
+            "rls_forced": false,
+            "rls_enabled": true
+        },
+        {
+            "table": "players",
+            "schema": "public",
+            "rls_forced": false,
+            "rls_enabled": true
+        },
+        {
+            "table": "profiles",
+            "schema": "public",
+            "rls_forced": false,
+            "rls_enabled": true
+        },
+        {
+            "table": "round_players",
+            "schema": "public",
+            "rls_forced": false,
+            "rls_enabled": true
+        },
+        {
+            "table": "rounds",
+            "schema": "public",
+            "rls_forced": false,
+            "rls_enabled": true
+        },
+        {
+            "table": "seasons",
+            "schema": "public",
+            "rls_forced": false,
+            "rls_enabled": true
+        },
+        {
+            "table": "stryktipset_draw_events",
+            "schema": "public",
+            "rls_forced": false,
+            "rls_enabled": true
+        },
+        {
+            "table": "stryktipset_draws",
+            "schema": "public",
+            "rls_forced": false,
+            "rls_enabled": true
+        },
+        {
+            "table": "stryktipset_picks",
+            "schema": "public",
+            "rls_forced": false,
+            "rls_enabled": true
+        }
+    ],
+    "columns": [
+        {
+            "table": "articles",
+            "column": "id",
+            "default": null,
+            "identity": "YES",
+            "nullable": "NO",
+            "position": 1,
+            "udt_name": "int8",
+            "data_type": "bigint",
+            "generated": "NEVER"
+        },
+        {
+            "table": "articles",
+            "column": "title",
+            "default": null,
+            "identity": "NO",
+            "nullable": "NO",
+            "position": 2,
+            "udt_name": "text",
+            "data_type": "text",
+            "generated": "NEVER"
+        },
+        {
+            "table": "articles",
+            "column": "content",
+            "default": null,
+            "identity": "NO",
+            "nullable": "NO",
+            "position": 3,
+            "udt_name": "text",
+            "data_type": "text",
+            "generated": "NEVER"
+        },
+        {
+            "table": "articles",
+            "column": "author_id",
+            "default": "auth.uid()",
+            "identity": "NO",
+            "nullable": "NO",
+            "position": 4,
+            "udt_name": "uuid",
+            "data_type": "uuid",
+            "generated": "NEVER"
+        },
+        {
+            "table": "articles",
+            "column": "created_at",
+            "default": "now()",
+            "identity": "NO",
+            "nullable": "NO",
+            "position": 5,
+            "udt_name": "timestamptz",
+            "data_type": "timestamp with time zone",
+            "generated": "NEVER"
+        },
+        {
+            "table": "editors",
+            "column": "user_id",
+            "default": null,
+            "identity": "NO",
+            "nullable": "NO",
+            "position": 1,
+            "udt_name": "uuid",
+            "data_type": "uuid",
+            "generated": "NEVER"
+        },
+        {
+            "table": "player_stats",
+            "column": "id",
+            "default": null,
+            "identity": "NO",
+            "nullable": "YES",
+            "position": 1,
+            "udt_name": "int8",
+            "data_type": "bigint",
+            "generated": "NEVER"
+        },
+        {
+            "table": "player_stats",
+            "column": "name",
+            "default": null,
+            "identity": "NO",
+            "nullable": "YES",
+            "position": 2,
+            "udt_name": "text",
+            "data_type": "text",
+            "generated": "NEVER"
+        },
+        {
+            "table": "player_stats",
+            "column": "score",
+            "default": null,
+            "identity": "NO",
+            "nullable": "YES",
+            "position": 3,
+            "udt_name": "int8",
+            "data_type": "bigint",
+            "generated": "NEVER"
+        },
+        {
+            "table": "player_stats",
+            "column": "total_matches",
+            "default": null,
+            "identity": "NO",
+            "nullable": "YES",
+            "position": 4,
+            "udt_name": "int8",
+            "data_type": "bigint",
+            "generated": "NEVER"
+        },
+        {
+            "table": "player_stats",
+            "column": "rounds_played",
+            "default": null,
+            "identity": "NO",
+            "nullable": "YES",
+            "position": 5,
+            "udt_name": "int8",
+            "data_type": "bigint",
+            "generated": "NEVER"
+        },
+        {
+            "table": "player_stats",
+            "column": "avg_score_per_round",
+            "default": null,
+            "identity": "NO",
+            "nullable": "YES",
+            "position": 6,
+            "udt_name": "numeric",
+            "data_type": "numeric",
+            "generated": "NEVER"
+        },
+        {
+            "table": "player_stats_by_season",
+            "column": "season_id",
+            "default": null,
+            "identity": "NO",
+            "nullable": "YES",
+            "position": 1,
+            "udt_name": "int8",
+            "data_type": "bigint",
+            "generated": "NEVER"
+        },
+        {
+            "table": "player_stats_by_season",
+            "column": "season_name",
+            "default": null,
+            "identity": "NO",
+            "nullable": "YES",
+            "position": 2,
+            "udt_name": "text",
+            "data_type": "text",
+            "generated": "NEVER"
+        },
+        {
+            "table": "player_stats_by_season",
+            "column": "start_year",
+            "default": null,
+            "identity": "NO",
+            "nullable": "YES",
+            "position": 3,
+            "udt_name": "int2",
+            "data_type": "smallint",
+            "generated": "NEVER"
+        },
+        {
+            "table": "player_stats_by_season",
+            "column": "end_year",
+            "default": null,
+            "identity": "NO",
+            "nullable": "YES",
+            "position": 4,
+            "udt_name": "int2",
+            "data_type": "smallint",
+            "generated": "NEVER"
+        },
+        {
+            "table": "player_stats_by_season",
+            "column": "is_current",
+            "default": null,
+            "identity": "NO",
+            "nullable": "YES",
+            "position": 5,
+            "udt_name": "bool",
+            "data_type": "boolean",
+            "generated": "NEVER"
+        },
+        {
+            "table": "player_stats_by_season",
+            "column": "id",
+            "default": null,
+            "identity": "NO",
+            "nullable": "YES",
+            "position": 6,
+            "udt_name": "int8",
+            "data_type": "bigint",
+            "generated": "NEVER"
+        },
+        {
+            "table": "player_stats_by_season",
+            "column": "name",
+            "default": null,
+            "identity": "NO",
+            "nullable": "YES",
+            "position": 7,
+            "udt_name": "text",
+            "data_type": "text",
+            "generated": "NEVER"
+        },
+        {
+            "table": "player_stats_by_season",
+            "column": "score",
+            "default": null,
+            "identity": "NO",
+            "nullable": "YES",
+            "position": 8,
+            "udt_name": "int8",
+            "data_type": "bigint",
+            "generated": "NEVER"
+        },
+        {
+            "table": "player_stats_by_season",
+            "column": "total_matches",
+            "default": null,
+            "identity": "NO",
+            "nullable": "YES",
+            "position": 9,
+            "udt_name": "int8",
+            "data_type": "bigint",
+            "generated": "NEVER"
+        },
+        {
+            "table": "player_stats_by_season",
+            "column": "rounds_played",
+            "default": null,
+            "identity": "NO",
+            "nullable": "YES",
+            "position": 10,
+            "udt_name": "int8",
+            "data_type": "bigint",
+            "generated": "NEVER"
+        },
+        {
+            "table": "player_stats_by_season",
+            "column": "avg_score_per_round",
+            "default": null,
+            "identity": "NO",
+            "nullable": "YES",
+            "position": 11,
+            "udt_name": "numeric",
+            "data_type": "numeric",
+            "generated": "NEVER"
+        },
+        {
+            "table": "players",
+            "column": "id",
+            "default": null,
+            "identity": "YES",
+            "nullable": "NO",
+            "position": 1,
+            "udt_name": "int8",
+            "data_type": "bigint",
+            "generated": "NEVER"
+        },
+        {
+            "table": "players",
+            "column": "name",
+            "default": null,
+            "identity": "NO",
+            "nullable": "NO",
+            "position": 2,
+            "udt_name": "text",
+            "data_type": "text",
+            "generated": "NEVER"
+        },
+        {
+            "table": "profiles",
+            "column": "id",
+            "default": null,
+            "identity": "NO",
+            "nullable": "NO",
+            "position": 1,
+            "udt_name": "uuid",
+            "data_type": "uuid",
+            "generated": "NEVER"
+        },
+        {
+            "table": "profiles",
+            "column": "display_name",
+            "default": null,
+            "identity": "NO",
+            "nullable": "NO",
+            "position": 2,
+            "udt_name": "text",
+            "data_type": "text",
+            "generated": "NEVER"
+        },
+        {
+            "table": "profiles",
+            "column": "created_at",
+            "default": "now()",
+            "identity": "NO",
+            "nullable": "NO",
+            "position": 3,
+            "udt_name": "timestamptz",
+            "data_type": "timestamp with time zone",
+            "generated": "NEVER"
+        },
+        {
+            "table": "profiles",
+            "column": "role",
+            "default": "'user'::text",
+            "identity": "NO",
+            "nullable": "NO",
+            "position": 4,
+            "udt_name": "text",
+            "data_type": "text",
+            "generated": "NEVER"
+        },
+        {
+            "table": "round_players",
+            "column": "id",
+            "default": null,
+            "identity": "YES",
+            "nullable": "NO",
+            "position": 1,
+            "udt_name": "int8",
+            "data_type": "bigint",
+            "generated": "NEVER"
+        },
+        {
+            "table": "round_players",
+            "column": "round_id",
+            "default": null,
+            "identity": "NO",
+            "nullable": "NO",
+            "position": 2,
+            "udt_name": "int8",
+            "data_type": "bigint",
+            "generated": "NEVER"
+        },
+        {
+            "table": "round_players",
+            "column": "player_id",
+            "default": null,
+            "identity": "NO",
+            "nullable": "NO",
+            "position": 3,
+            "udt_name": "int8",
+            "data_type": "bigint",
+            "generated": "NEVER"
+        },
+        {
+            "table": "round_players",
+            "column": "score",
+            "default": null,
+            "identity": "NO",
+            "nullable": "NO",
+            "position": 4,
+            "udt_name": "int4",
+            "data_type": "integer",
+            "generated": "NEVER"
+        },
+        {
+            "table": "round_players",
+            "column": "matches_picked",
+            "default": "3",
+            "identity": "NO",
+            "nullable": "NO",
+            "position": 5,
+            "udt_name": "int4",
+            "data_type": "integer",
+            "generated": "NEVER"
+        },
+        {
+            "table": "rounds",
+            "column": "id",
+            "default": null,
+            "identity": "YES",
+            "nullable": "NO",
+            "position": 1,
+            "udt_name": "int8",
+            "data_type": "bigint",
+            "generated": "NEVER"
+        },
+        {
+            "table": "rounds",
+            "column": "roundnumber",
+            "default": null,
+            "identity": "NO",
+            "nullable": "NO",
+            "position": 2,
+            "udt_name": "int4",
+            "data_type": "integer",
+            "generated": "NEVER"
+        },
+        {
+            "table": "rounds",
+            "column": "week",
+            "default": null,
+            "identity": "NO",
+            "nullable": "NO",
+            "position": 3,
+            "udt_name": "int4",
+            "data_type": "integer",
+            "generated": "NEVER"
+        },
+        {
+            "table": "rounds",
+            "column": "totalscore",
+            "default": "0",
+            "identity": "NO",
+            "nullable": "NO",
+            "position": 4,
+            "udt_name": "int4",
+            "data_type": "integer",
+            "generated": "NEVER"
+        },
+        {
+            "table": "rounds",
+            "column": "season_id",
+            "default": null,
+            "identity": "NO",
+            "nullable": "NO",
+            "position": 5,
+            "udt_name": "int8",
+            "data_type": "bigint",
+            "generated": "NEVER"
+        },
+        {
+            "table": "seasons",
+            "column": "id",
+            "default": null,
+            "identity": "YES",
+            "nullable": "NO",
+            "position": 1,
+            "udt_name": "int8",
+            "data_type": "bigint",
+            "generated": "NEVER"
+        },
+        {
+            "table": "seasons",
+            "column": "name",
+            "default": null,
+            "identity": "NO",
+            "nullable": "NO",
+            "position": 2,
+            "udt_name": "text",
+            "data_type": "text",
+            "generated": "NEVER"
+        },
+        {
+            "table": "seasons",
+            "column": "start_year",
+            "default": null,
+            "identity": "NO",
+            "nullable": "NO",
+            "position": 3,
+            "udt_name": "int2",
+            "data_type": "smallint",
+            "generated": "NEVER"
+        },
+        {
+            "table": "seasons",
+            "column": "end_year",
+            "default": null,
+            "identity": "NO",
+            "nullable": "NO",
+            "position": 4,
+            "udt_name": "int2",
+            "data_type": "smallint",
+            "generated": "NEVER"
+        },
+        {
+            "table": "seasons",
+            "column": "is_current",
+            "default": "false",
+            "identity": "NO",
+            "nullable": "NO",
+            "position": 5,
+            "udt_name": "bool",
+            "data_type": "boolean",
+            "generated": "NEVER"
+        },
+        {
+            "table": "seasons",
+            "column": "created_at",
+            "default": "now()",
+            "identity": "NO",
+            "nullable": "NO",
+            "position": 6,
+            "udt_name": "timestamptz",
+            "data_type": "timestamp with time zone",
+            "generated": "NEVER"
+        },
+        {
+            "table": "stryktipset_draw_events",
+            "column": "draw_number",
+            "default": null,
+            "identity": "NO",
+            "nullable": "NO",
+            "position": 1,
+            "udt_name": "int8",
+            "data_type": "bigint",
+            "generated": "NEVER"
+        },
+        {
+            "table": "stryktipset_draw_events",
+            "column": "event_number",
+            "default": null,
+            "identity": "NO",
+            "nullable": "NO",
+            "position": 2,
+            "udt_name": "int4",
+            "data_type": "integer",
+            "generated": "NEVER"
+        },
+        {
+            "table": "stryktipset_draw_events",
+            "column": "home_team",
+            "default": null,
+            "identity": "NO",
+            "nullable": "YES",
+            "position": 3,
+            "udt_name": "text",
+            "data_type": "text",
+            "generated": "NEVER"
+        },
+        {
+            "table": "stryktipset_draw_events",
+            "column": "away_team",
+            "default": null,
+            "identity": "NO",
+            "nullable": "YES",
+            "position": 4,
+            "udt_name": "text",
+            "data_type": "text",
+            "generated": "NEVER"
+        },
+        {
+            "table": "stryktipset_draw_events",
+            "column": "league_name",
+            "default": null,
+            "identity": "NO",
+            "nullable": "YES",
+            "position": 5,
+            "udt_name": "text",
+            "data_type": "text",
+            "generated": "NEVER"
+        },
+        {
+            "table": "stryktipset_draw_events",
+            "column": "odds_1",
+            "default": null,
+            "identity": "NO",
+            "nullable": "YES",
+            "position": 6,
+            "udt_name": "numeric",
+            "data_type": "numeric",
+            "generated": "NEVER"
+        },
+        {
+            "table": "stryktipset_draw_events",
+            "column": "odds_x",
+            "default": null,
+            "identity": "NO",
+            "nullable": "YES",
+            "position": 7,
+            "udt_name": "numeric",
+            "data_type": "numeric",
+            "generated": "NEVER"
+        },
+        {
+            "table": "stryktipset_draw_events",
+            "column": "odds_2",
+            "default": null,
+            "identity": "NO",
+            "nullable": "YES",
+            "position": 8,
+            "udt_name": "numeric",
+            "data_type": "numeric",
+            "generated": "NEVER"
+        },
+        {
+            "table": "stryktipset_draw_events",
+            "column": "dist_1",
+            "default": null,
+            "identity": "NO",
+            "nullable": "YES",
+            "position": 9,
+            "udt_name": "int4",
+            "data_type": "integer",
+            "generated": "NEVER"
+        },
+        {
+            "table": "stryktipset_draw_events",
+            "column": "dist_x",
+            "default": null,
+            "identity": "NO",
+            "nullable": "YES",
+            "position": 10,
+            "udt_name": "int4",
+            "data_type": "integer",
+            "generated": "NEVER"
+        },
+        {
+            "table": "stryktipset_draw_events",
+            "column": "dist_2",
+            "default": null,
+            "identity": "NO",
+            "nullable": "YES",
+            "position": 11,
+            "udt_name": "int4",
+            "data_type": "integer",
+            "generated": "NEVER"
+        },
+        {
+            "table": "stryktipset_draws",
+            "column": "draw_number",
+            "default": null,
+            "identity": "NO",
+            "nullable": "NO",
+            "position": 1,
+            "udt_name": "int8",
+            "data_type": "bigint",
+            "generated": "NEVER"
+        },
+        {
+            "table": "stryktipset_draws",
+            "column": "product_name",
+            "default": null,
+            "identity": "NO",
+            "nullable": "YES",
+            "position": 2,
+            "udt_name": "text",
+            "data_type": "text",
+            "generated": "NEVER"
+        },
+        {
+            "table": "stryktipset_draws",
+            "column": "reg_open_time",
+            "default": null,
+            "identity": "NO",
+            "nullable": "YES",
+            "position": 3,
+            "udt_name": "timestamptz",
+            "data_type": "timestamp with time zone",
+            "generated": "NEVER"
+        },
+        {
+            "table": "stryktipset_draws",
+            "column": "reg_close_time",
+            "default": null,
+            "identity": "NO",
+            "nullable": "YES",
+            "position": 4,
+            "udt_name": "timestamptz",
+            "data_type": "timestamp with time zone",
+            "generated": "NEVER"
+        },
+        {
+            "table": "stryktipset_draws",
+            "column": "draw_state",
+            "default": null,
+            "identity": "NO",
+            "nullable": "YES",
+            "position": 5,
+            "udt_name": "text",
+            "data_type": "text",
+            "generated": "NEVER"
+        },
+        {
+            "table": "stryktipset_draws",
+            "column": "fetched_at",
+            "default": "now()",
+            "identity": "NO",
+            "nullable": "NO",
+            "position": 6,
+            "udt_name": "timestamptz",
+            "data_type": "timestamp with time zone",
+            "generated": "NEVER"
+        },
+        {
+            "table": "stryktipset_picks",
+            "column": "draw_number",
+            "default": null,
+            "identity": "NO",
+            "nullable": "NO",
+            "position": 1,
+            "udt_name": "int8",
+            "data_type": "bigint",
+            "generated": "NEVER"
+        },
+        {
+            "table": "stryktipset_picks",
+            "column": "event_number",
+            "default": null,
+            "identity": "NO",
+            "nullable": "NO",
+            "position": 2,
+            "udt_name": "int4",
+            "data_type": "integer",
+            "generated": "NEVER"
+        },
+        {
+            "table": "stryktipset_picks",
+            "column": "user_id",
+            "default": null,
+            "identity": "NO",
+            "nullable": "NO",
+            "position": 3,
+            "udt_name": "uuid",
+            "data_type": "uuid",
+            "generated": "NEVER"
+        },
+        {
+            "table": "stryktipset_picks",
+            "column": "pick",
+            "default": null,
+            "identity": "NO",
+            "nullable": "NO",
+            "position": 4,
+            "udt_name": "text",
+            "data_type": "text",
+            "generated": "NEVER"
+        },
+        {
+            "table": "stryktipset_picks",
+            "column": "created_at",
+            "default": "now()",
+            "identity": "NO",
+            "nullable": "NO",
+            "position": 5,
+            "udt_name": "timestamptz",
+            "data_type": "timestamp with time zone",
+            "generated": "NEVER"
+        },
+        {
+            "table": "stryktipset_picks",
+            "column": "updated_at",
+            "default": "now()",
+            "identity": "NO",
+            "nullable": "NO",
+            "position": 6,
+            "udt_name": "timestamptz",
+            "data_type": "timestamp with time zone",
+            "generated": "NEVER"
+        }
+    ],
+    "indexes": [
+        {
+            "table": "articles",
+            "definition": "CREATE UNIQUE INDEX articles_pkey ON public.articles USING btree (id)",
+            "index_name": "articles_pkey"
+        },
+        {
+            "table": "articles",
+            "definition": "CREATE INDEX idx_articles_created_at ON public.articles USING btree (created_at DESC)",
+            "index_name": "idx_articles_created_at"
+        },
+        {
+            "table": "editors",
+            "definition": "CREATE UNIQUE INDEX editors_pkey ON public.editors USING btree (user_id)",
+            "index_name": "editors_pkey"
+        },
+        {
+            "table": "players",
+            "definition": "CREATE UNIQUE INDEX players_name_key ON public.players USING btree (name)",
+            "index_name": "players_name_key"
+        },
+        {
+            "table": "players",
+            "definition": "CREATE UNIQUE INDEX players_pkey ON public.players USING btree (id)",
+            "index_name": "players_pkey"
+        },
+        {
+            "table": "profiles",
+            "definition": "CREATE UNIQUE INDEX profiles_pkey ON public.profiles USING btree (id)",
+            "index_name": "profiles_pkey"
+        },
+        {
+            "table": "round_players",
+            "definition": "CREATE INDEX idx_round_players_player ON public.round_players USING btree (player_id)",
+            "index_name": "idx_round_players_player"
+        },
+        {
+            "table": "round_players",
+            "definition": "CREATE INDEX idx_round_players_round ON public.round_players USING btree (round_id)",
+            "index_name": "idx_round_players_round"
+        },
+        {
+            "table": "round_players",
+            "definition": "CREATE UNIQUE INDEX round_players_pkey ON public.round_players USING btree (id)",
+            "index_name": "round_players_pkey"
+        },
+        {
+            "table": "rounds",
+            "definition": "CREATE UNIQUE INDEX rounds_pkey ON public.rounds USING btree (id)",
+            "index_name": "rounds_pkey"
+        },
+        {
+            "table": "rounds",
+            "definition": "CREATE INDEX rounds_season_id_idx ON public.rounds USING btree (season_id)",
+            "index_name": "rounds_season_id_idx"
+        },
+        {
+            "table": "rounds",
+            "definition": "CREATE UNIQUE INDEX rounds_season_roundnumber_idx ON public.rounds USING btree (season_id, roundnumber)",
+            "index_name": "rounds_season_roundnumber_idx"
+        },
+        {
+            "table": "seasons",
+            "definition": "CREATE UNIQUE INDEX seasons_name_key ON public.seasons USING btree (name)",
+            "index_name": "seasons_name_key"
+        },
+        {
+            "table": "seasons",
+            "definition": "CREATE UNIQUE INDEX seasons_one_current_idx ON public.seasons USING btree (is_current) WHERE is_current",
+            "index_name": "seasons_one_current_idx"
+        },
+        {
+            "table": "seasons",
+            "definition": "CREATE UNIQUE INDEX seasons_pkey ON public.seasons USING btree (id)",
+            "index_name": "seasons_pkey"
+        },
+        {
+            "table": "stryktipset_draw_events",
+            "definition": "CREATE INDEX idx_stryk_events_draw ON public.stryktipset_draw_events USING btree (draw_number)",
+            "index_name": "idx_stryk_events_draw"
+        },
+        {
+            "table": "stryktipset_draw_events",
+            "definition": "CREATE UNIQUE INDEX stryktipset_draw_events_pkey ON public.stryktipset_draw_events USING btree (draw_number, event_number)",
+            "index_name": "stryktipset_draw_events_pkey"
+        },
+        {
+            "table": "stryktipset_draws",
+            "definition": "CREATE UNIQUE INDEX stryktipset_draws_pkey ON public.stryktipset_draws USING btree (draw_number)",
+            "index_name": "stryktipset_draws_pkey"
+        },
+        {
+            "table": "stryktipset_picks",
+            "definition": "CREATE INDEX idx_picks_draw ON public.stryktipset_picks USING btree (draw_number)",
+            "index_name": "idx_picks_draw"
+        },
+        {
+            "table": "stryktipset_picks",
+            "definition": "CREATE INDEX idx_picks_user ON public.stryktipset_picks USING btree (user_id)",
+            "index_name": "idx_picks_user"
+        },
+        {
+            "table": "stryktipset_picks",
+            "definition": "CREATE UNIQUE INDEX stryktipset_picks_pkey ON public.stryktipset_picks USING btree (draw_number, event_number, user_id)",
+            "index_name": "stryktipset_picks_pkey"
+        },
+        {
+            "table": "stryktipset_picks",
+            "definition": "CREATE UNIQUE INDEX uniq_draw_event ON public.stryktipset_picks USING btree (draw_number, event_number)",
+            "index_name": "uniq_draw_event"
+        }
+    ],
+    "triggers": [
+        {
+            "event": "INSERT",
+            "table": "round_players",
+            "timing": "AFTER",
+            "statement": "EXECUTE FUNCTION recompute_round_total()",
+            "trigger_name": "trg_round_players_recompute"
+        },
+        {
+            "event": "DELETE",
+            "table": "round_players",
+            "timing": "AFTER",
+            "statement": "EXECUTE FUNCTION recompute_round_total()",
+            "trigger_name": "trg_round_players_recompute"
+        },
+        {
+            "event": "UPDATE",
+            "table": "round_players",
+            "timing": "AFTER",
+            "statement": "EXECUTE FUNCTION recompute_round_total()",
+            "trigger_name": "trg_round_players_recompute"
+        }
+    ],
+    "functions": [
+        {
+            "language": "sql",
+            "definition": "CREATE OR REPLACE FUNCTION public.is_admin()\n RETURNS boolean\n LANGUAGE sql\n STABLE\nAS $function$\r\n  select exists (\r\n    select 1\r\n    from public.profiles p\r\n    where p.id = auth.uid()\r\n      and p.role = 'admin'\r\n  );\r\n$function$\n",
+            "return_type": "boolean",
+            "function_name": "is_admin",
+            "security_definer": false,
+            "identity_arguments": ""
+        },
+        {
+            "language": "plpgsql",
+            "definition": "CREATE OR REPLACE FUNCTION public.lock_in_picks_block_match(p_draw_number bigint, p_user_id uuid, p_picks jsonb)\n RETURNS void\n LANGUAGE plpgsql\nAS $function$\r\ndeclare\r\n  v_taken_count int;\r\nbegin\r\n  -- p_picks förväntas vara en json-array:\r\n  -- [{ \"event_number\": 1, \"pick\": \"1X\" }, ...]\r\n  -- 1) Kolla konflikter: matchen finns redan för annan user?\r\n  select count(*)\r\n  into v_taken_count\r\n  from public.stryktipset_picks sp\r\n  join jsonb_array_elements(p_picks) j on (sp.event_number = (j->>'event_number')::int)\r\n  where sp.draw_number = p_draw_number\r\n    and sp.user_id <> p_user_id;\r\n\r\n  if v_taken_count > 0 then\r\n    raise exception 'One or more matches are already taken';\r\n  end if;\r\n\r\n  -- 2) Upsert dina picks\r\n  insert into public.stryktipset_picks (draw_number, event_number, user_id, pick, updated_at)\r\n  select\r\n    p_draw_number,\r\n    (j->>'event_number')::int,\r\n    p_user_id,\r\n    (j->>'pick')::text,\r\n    now()\r\n  from jsonb_array_elements(p_picks) j\r\n  on conflict (draw_number, event_number) do update\r\n  set\r\n    user_id = excluded.user_id,\r\n    pick = excluded.pick,\r\n    updated_at = excluded.updated_at;\r\n\r\n  -- 3) Ta bort allt annat du tidigare hade i samma draw\r\n  delete from public.stryktipset_picks\r\n  where draw_number = p_draw_number\r\n    and user_id = p_user_id\r\n    and event_number not in (\r\n      select (j->>'event_number')::int from jsonb_array_elements(p_picks) j\r\n    );\r\nend;\r\n$function$\n",
+            "return_type": "void",
+            "function_name": "lock_in_picks_block_match",
+            "security_definer": false,
+            "identity_arguments": "p_draw_number bigint, p_user_id uuid, p_picks jsonb"
+        },
+        {
+            "language": "plpgsql",
+            "definition": "CREATE OR REPLACE FUNCTION public.recompute_round_total()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\r\nbegin\r\n  update rounds r\r\n    set totalScore = coalesce((select sum(score) from round_players rp where rp.round_id = r.id), 0)\r\n    where r.id = coalesce(NEW.round_id, OLD.round_id);\r\n  return null;\r\nend $function$\n",
+            "return_type": "trigger",
+            "function_name": "recompute_round_total",
+            "security_definer": false,
+            "identity_arguments": ""
+        }
+    ],
+    "sequences": [
+    ],
+    "constraints": [
+        {
+            "table": "articles",
+            "definition": "PRIMARY KEY (id)",
+            "constraint_name": "articles_pkey",
+            "constraint_type": "PRIMARY KEY"
+        },
+        {
+            "table": "editors",
+            "definition": "PRIMARY KEY (user_id)",
+            "constraint_name": "editors_pkey",
+            "constraint_type": "PRIMARY KEY"
+        },
+        {
+            "table": "players",
+            "definition": "UNIQUE (name)",
+            "constraint_name": "players_name_key",
+            "constraint_type": "UNIQUE"
+        },
+        {
+            "table": "players",
+            "definition": "PRIMARY KEY (id)",
+            "constraint_name": "players_pkey",
+            "constraint_type": "PRIMARY KEY"
+        },
+        {
+            "table": "profiles",
+            "definition": "FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE",
+            "constraint_name": "profiles_id_fkey",
+            "constraint_type": "FOREIGN KEY"
+        },
+        {
+            "table": "profiles",
+            "definition": "PRIMARY KEY (id)",
+            "constraint_name": "profiles_pkey",
+            "constraint_type": "PRIMARY KEY"
+        },
+        {
+            "table": "profiles",
+            "definition": "CHECK (role = ANY (ARRAY['user'::text, 'admin'::text]))",
+            "constraint_name": "profiles_role_check",
+            "constraint_type": "CHECK"
+        },
+        {
+            "table": "round_players",
+            "definition": "PRIMARY KEY (id)",
+            "constraint_name": "round_players_pkey",
+            "constraint_type": "PRIMARY KEY"
+        },
+        {
+            "table": "round_players",
+            "definition": "FOREIGN KEY (player_id) REFERENCES players(id) ON DELETE CASCADE",
+            "constraint_name": "round_players_player_id_fkey",
+            "constraint_type": "FOREIGN KEY"
+        },
+        {
+            "table": "round_players",
+            "definition": "FOREIGN KEY (round_id) REFERENCES rounds(id) ON DELETE CASCADE",
+            "constraint_name": "round_players_round_id_fkey",
+            "constraint_type": "FOREIGN KEY"
+        },
+        {
+            "table": "rounds",
+            "definition": "PRIMARY KEY (id)",
+            "constraint_name": "rounds_pkey",
+            "constraint_type": "PRIMARY KEY"
+        },
+        {
+            "table": "rounds",
+            "definition": "FOREIGN KEY (season_id) REFERENCES seasons(id) ON DELETE RESTRICT",
+            "constraint_name": "rounds_season_id_fkey",
+            "constraint_type": "FOREIGN KEY"
+        },
+        {
+            "table": "seasons",
+            "definition": "UNIQUE (name)",
+            "constraint_name": "seasons_name_key",
+            "constraint_type": "UNIQUE"
+        },
+        {
+            "table": "seasons",
+            "definition": "PRIMARY KEY (id)",
+            "constraint_name": "seasons_pkey",
+            "constraint_type": "PRIMARY KEY"
+        },
+        {
+            "table": "seasons",
+            "definition": "CHECK (end_year = (start_year + 1))",
+            "constraint_name": "seasons_year_range_check",
+            "constraint_type": "CHECK"
+        },
+        {
+            "table": "stryktipset_draw_events",
+            "definition": "FOREIGN KEY (draw_number) REFERENCES stryktipset_draws(draw_number) ON DELETE CASCADE",
+            "constraint_name": "stryktipset_draw_events_draw_number_fkey",
+            "constraint_type": "FOREIGN KEY"
+        },
+        {
+            "table": "stryktipset_draw_events",
+            "definition": "PRIMARY KEY (draw_number, event_number)",
+            "constraint_name": "stryktipset_draw_events_pkey",
+            "constraint_type": "PRIMARY KEY"
+        },
+        {
+            "table": "stryktipset_draws",
+            "definition": "PRIMARY KEY (draw_number)",
+            "constraint_name": "stryktipset_draws_pkey",
+            "constraint_type": "PRIMARY KEY"
+        },
+        {
+            "table": "stryktipset_picks",
+            "definition": "CHECK (pick = ANY (ARRAY['1'::text, 'X'::text, '2'::text, '1X'::text, '12'::text, 'X2'::text]))",
+            "constraint_name": "stryktipset_pick_valid",
+            "constraint_type": "CHECK"
+        },
+        {
+            "table": "stryktipset_picks",
+            "definition": "FOREIGN KEY (draw_number) REFERENCES stryktipset_draws(draw_number) ON DELETE CASCADE",
+            "constraint_name": "stryktipset_picks_draw_number_fkey",
+            "constraint_type": "FOREIGN KEY"
+        },
+        {
+            "table": "stryktipset_picks",
+            "definition": "PRIMARY KEY (draw_number, event_number, user_id)",
+            "constraint_name": "stryktipset_picks_pkey",
+            "constraint_type": "PRIMARY KEY"
+        },
+        {
+            "table": "stryktipset_picks",
+            "definition": "FOREIGN KEY (user_id) REFERENCES profiles(id) ON DELETE CASCADE",
+            "constraint_name": "stryktipset_picks_profile_fkey",
+            "constraint_type": "FOREIGN KEY"
+        },
+        {
+            "table": "stryktipset_picks",
+            "definition": "UNIQUE (draw_number, event_number)",
+            "constraint_name": "uniq_draw_event",
+            "constraint_type": "UNIQUE"
+        }
+    ],
+    "rls_policies": [
+        {
+            "roles": [
+                "public"
+            ],
+            "table": "articles",
+            "using": "(auth.role() = 'authenticated'::text)",
+            "command": "DELETE",
+            "permissive": "PERMISSIVE",
+            "with_check": null,
+            "policy_name": "Authenticated can delete articles"
+        },
+        {
+            "roles": [
+                "public"
+            ],
+            "table": "articles",
+            "using": null,
+            "command": "INSERT",
+            "permissive": "PERMISSIVE",
+            "with_check": "(auth.role() = 'authenticated'::text)",
+            "policy_name": "Authenticated can insert articles"
+        },
+        {
+            "roles": [
+                "public"
+            ],
+            "table": "articles",
+            "using": "(auth.role() = 'authenticated'::text)",
+            "command": "UPDATE",
+            "permissive": "PERMISSIVE",
+            "with_check": "(auth.role() = 'authenticated'::text)",
+            "policy_name": "Authenticated can update articles"
+        },
+        {
+            "roles": [
+                "public"
+            ],
+            "table": "articles",
+            "using": "true",
+            "command": "SELECT",
+            "permissive": "PERMISSIVE",
+            "with_check": null,
+            "policy_name": "Public can read articles"
+        },
+        {
+            "roles": [
+                "authenticated"
+            ],
+            "table": "players",
+            "using": null,
+            "command": "INSERT",
+            "permissive": "PERMISSIVE",
+            "with_check": "true",
+            "policy_name": "Enable insert for authenticated users only"
+        },
+        {
+            "roles": [
+                "authenticated"
+            ],
+            "table": "players",
+            "using": "true",
+            "command": "DELETE",
+            "permissive": "PERMISSIVE",
+            "with_check": null,
+            "policy_name": "players_delete"
+        },
+        {
+            "roles": [
+                "public"
+            ],
+            "table": "players",
+            "using": "true",
+            "command": "SELECT",
+            "permissive": "PERMISSIVE",
+            "with_check": null,
+            "policy_name": "players_read"
+        },
+        {
+            "roles": [
+                "authenticated"
+            ],
+            "table": "players",
+            "using": "true",
+            "command": "UPDATE",
+            "permissive": "PERMISSIVE",
+            "with_check": "true",
+            "policy_name": "players_update"
+        },
+        {
+            "roles": [
+                "public"
+            ],
+            "table": "profiles",
+            "using": null,
+            "command": "INSERT",
+            "permissive": "PERMISSIVE",
+            "with_check": "(auth.uid() = id)",
+            "policy_name": "profiles insert own"
+        },
+        {
+            "roles": [
+                "public"
+            ],
+            "table": "profiles",
+            "using": "true",
+            "command": "SELECT",
+            "permissive": "PERMISSIVE",
+            "with_check": null,
+            "policy_name": "profiles read"
+        },
+        {
+            "roles": [
+                "public"
+            ],
+            "table": "profiles",
+            "using": "(auth.uid() = id)",
+            "command": "UPDATE",
+            "permissive": "PERMISSIVE",
+            "with_check": null,
+            "policy_name": "profiles update own"
+        },
+        {
+            "roles": [
+                "authenticated"
+            ],
+            "table": "round_players",
+            "using": null,
+            "command": "INSERT",
+            "permissive": "PERMISSIVE",
+            "with_check": "true",
+            "policy_name": "Enable insert for authenticated users only (round_players)"
+        },
+        {
+            "roles": [
+                "authenticated"
+            ],
+            "table": "round_players",
+            "using": "true",
+            "command": "DELETE",
+            "permissive": "PERMISSIVE",
+            "with_check": null,
+            "policy_name": "round_players_delete"
+        },
+        {
+            "roles": [
+                "public"
+            ],
+            "table": "round_players",
+            "using": "true",
+            "command": "SELECT",
+            "permissive": "PERMISSIVE",
+            "with_check": null,
+            "policy_name": "round_players_read"
+        },
+        {
+            "roles": [
+                "authenticated"
+            ],
+            "table": "round_players",
+            "using": "true",
+            "command": "UPDATE",
+            "permissive": "PERMISSIVE",
+            "with_check": "true",
+            "policy_name": "round_players_update"
+        },
+        {
+            "roles": [
+                "public"
+            ],
+            "table": "round_players",
+            "using": null,
+            "command": "INSERT",
+            "permissive": "PERMISSIVE",
+            "with_check": "(EXISTS ( SELECT 1\n   FROM editors e\n  WHERE (e.user_id = auth.uid())))",
+            "policy_name": "round_players_write"
+        },
+        {
+            "roles": [
+                "authenticated"
+            ],
+            "table": "rounds",
+            "using": null,
+            "command": "INSERT",
+            "permissive": "PERMISSIVE",
+            "with_check": "true",
+            "policy_name": "Enable insert for authenticated users only (rounds)"
+        },
+        {
+            "roles": [
+                "public"
+            ],
+            "table": "rounds",
+            "using": "is_admin()",
+            "command": "DELETE",
+            "permissive": "PERMISSIVE",
+            "with_check": null,
+            "policy_name": "rounds admin delete"
+        },
+        {
+            "roles": [
+                "public"
+            ],
+            "table": "rounds",
+            "using": null,
+            "command": "INSERT",
+            "permissive": "PERMISSIVE",
+            "with_check": "is_admin()",
+            "policy_name": "rounds admin insert"
+        },
+        {
+            "roles": [
+                "public"
+            ],
+            "table": "rounds",
+            "using": "is_admin()",
+            "command": "UPDATE",
+            "permissive": "PERMISSIVE",
+            "with_check": "is_admin()",
+            "policy_name": "rounds admin update"
+        },
+        {
+            "roles": [
+                "public"
+            ],
+            "table": "rounds",
+            "using": "true",
+            "command": "SELECT",
+            "permissive": "PERMISSIVE",
+            "with_check": null,
+            "policy_name": "rounds read"
+        },
+        {
+            "roles": [
+                "authenticated"
+            ],
+            "table": "rounds",
+            "using": "true",
+            "command": "DELETE",
+            "permissive": "PERMISSIVE",
+            "with_check": null,
+            "policy_name": "rounds_delete"
+        },
+        {
+            "roles": [
+                "public"
+            ],
+            "table": "rounds",
+            "using": "true",
+            "command": "SELECT",
+            "permissive": "PERMISSIVE",
+            "with_check": null,
+            "policy_name": "rounds_read"
+        },
+        {
+            "roles": [
+                "authenticated"
+            ],
+            "table": "rounds",
+            "using": "true",
+            "command": "UPDATE",
+            "permissive": "PERMISSIVE",
+            "with_check": "true",
+            "policy_name": "rounds_update"
+        },
+        {
+            "roles": [
+                "public"
+            ],
+            "table": "rounds",
+            "using": null,
+            "command": "INSERT",
+            "permissive": "PERMISSIVE",
+            "with_check": "(EXISTS ( SELECT 1\n   FROM editors e\n  WHERE (e.user_id = auth.uid())))",
+            "policy_name": "rounds_write"
+        },
+        {
+            "roles": [
+                "anon",
+                "authenticated"
+            ],
+            "table": "seasons",
+            "using": "true",
+            "command": "SELECT",
+            "permissive": "PERMISSIVE",
+            "with_check": null,
+            "policy_name": "Seasons are readable by everyone"
+        },
+        {
+            "roles": [
+                "authenticated"
+            ],
+            "table": "stryktipset_draw_events",
+            "using": "true",
+            "command": "SELECT",
+            "permissive": "PERMISSIVE",
+            "with_check": null,
+            "policy_name": "read draw events"
+        },
+        {
+            "roles": [
+                "authenticated"
+            ],
+            "table": "stryktipset_draws",
+            "using": "true",
+            "command": "SELECT",
+            "permissive": "PERMISSIVE",
+            "with_check": null,
+            "policy_name": "read draws"
+        },
+        {
+            "roles": [
+                "authenticated"
+            ],
+            "table": "stryktipset_picks",
+            "using": "(auth.uid() = user_id)",
+            "command": "DELETE",
+            "permissive": "PERMISSIVE",
+            "with_check": null,
+            "policy_name": "delete own picks"
+        },
+        {
+            "roles": [
+                "authenticated"
+            ],
+            "table": "stryktipset_picks",
+            "using": null,
+            "command": "INSERT",
+            "permissive": "PERMISSIVE",
+            "with_check": "(auth.uid() = user_id)",
+            "policy_name": "insert own picks"
+        },
+        {
+            "roles": [
+                "public"
+            ],
+            "table": "stryktipset_picks",
+            "using": "(auth.uid() = user_id)",
+            "command": "DELETE",
+            "permissive": "PERMISSIVE",
+            "with_check": null,
+            "policy_name": "picks delete own"
+        },
+        {
+            "roles": [
+                "public"
+            ],
+            "table": "stryktipset_picks",
+            "using": null,
+            "command": "INSERT",
+            "permissive": "PERMISSIVE",
+            "with_check": "(auth.uid() = user_id)",
+            "policy_name": "picks insert own"
+        },
+        {
+            "roles": [
+                "public"
+            ],
+            "table": "stryktipset_picks",
+            "using": "true",
+            "command": "SELECT",
+            "permissive": "PERMISSIVE",
+            "with_check": null,
+            "policy_name": "picks read"
+        },
+        {
+            "roles": [
+                "public"
+            ],
+            "table": "stryktipset_picks",
+            "using": "(auth.uid() = user_id)",
+            "command": "UPDATE",
+            "permissive": "PERMISSIVE",
+            "with_check": "(auth.uid() = user_id)",
+            "policy_name": "picks update own"
+        },
+        {
+            "roles": [
+                "authenticated"
+            ],
+            "table": "stryktipset_picks",
+            "using": "true",
+            "command": "SELECT",
+            "permissive": "PERMISSIVE",
+            "with_check": null,
+            "policy_name": "read picks"
+        },
+        {
+            "roles": [
+                "authenticated"
+            ],
+            "table": "stryktipset_picks",
+            "using": "(auth.uid() = user_id)",
+            "command": "UPDATE",
+            "permissive": "PERMISSIVE",
+            "with_check": "(auth.uid() = user_id)",
+            "policy_name": "update own picks"
+        }
+    ],
+    "materialized_views": [
+    ]
+}

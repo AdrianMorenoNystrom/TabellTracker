@@ -1,116 +1,102 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject, from, map, Observable } from 'rxjs';
-import { SupabaseClient } from '@supabase/supabase-js';
-import { supabase } from './supabase.client';
+import { Injectable, inject, DestroyRef } from '@angular/core';
+import { BehaviorSubject, Observable } from 'rxjs';
+import { SUPABASE } from './supabase.client';
 
-type ProfileRow = {
-  display_name: string | null;
-  role: 'user' | 'admin' | null;
-};
+export interface LeagueIdentity { player_id: number; name: string; is_admin: boolean; }
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private supabase: SupabaseClient;
-
-  private ready$ = new BehaviorSubject<boolean>(false);
-  private isAdmin$ = new BehaviorSubject<boolean>(false);
-  private loggedIn$ = new BehaviorSubject<boolean>(false);
-  private userId$ = new BehaviorSubject<string | null>(null);
-  private displayName$ = new BehaviorSubject<string | null>(null);
+  private supabase = inject(SUPABASE);
+  private ready = new BehaviorSubject(false);
+  private admin = new BehaviorSubject(false);
+  private member = new BehaviorSubject(false);
+  private uid = new BehaviorSubject<string | null>(null);
+  private name = new BehaviorSubject<string | null>(null);
+  identity: LeagueIdentity | null = null;
+  private generation = 0;
+  private latestRefresh: Promise<void> | null = null;
 
   constructor() {
-    this.supabase = supabase;
-
-    // 1) Initial session
-    this.supabase.auth.getSession().then(({ data }) => {
-      const user = data.session?.user ?? null;
-      this.applyUser(user).finally(() => this.ready$.next(true));
-    });
-
-    // 2) Auth changes
-    this.supabase.auth.onAuthStateChange((_event, session) => {
-      const user = session?.user ?? null;
-      // vi vet auth-läget efter första event också
-      this.applyUser(user).finally(() => this.ready$.next(true));
-    });
-  }
-
-  // --- Public streams ---
-  isReady$(): Observable<boolean> {
-    return this.ready$.asObservable();
-  }
-  isReadySnapshot(): boolean {
-    return this.ready$.value;
-  }
-
-  isUserAdmin$(): Observable<boolean> {
-    return this.isAdmin$.asObservable();
-  }
-  isUserAdminSnapshot(): boolean {
-    return this.isAdmin$.value;
-  }
-
-  isLoggedIn$(): Observable<boolean> {
-    return this.loggedIn$.asObservable();
-  }
-  isLoggedInSnapshot(): boolean {
-    return this.loggedIn$.value;
-  }
-
-  getUserId$(): Observable<string | null> {
-    return this.userId$.asObservable();
-  }
-  getUserIdSnapshot(): string | null {
-    return this.userId$.value;
-  }
-
-  getDisplayName$(): Observable<string | null> {
-    return this.displayName$.asObservable();
-  }
-  getDisplayNameSnapshot(): string | null {
-    return this.displayName$.value;
-  }
-
-  // --- Auth actions ---
-  login(email: string, password: string): Observable<{ token: string }> {
-    return from(this.supabase.auth.signInWithPassword({ email, password })).pipe(
-      map(({ data, error }) => {
-        if (error) throw error;
-        return { token: data.session?.access_token || '' };
-      })
-    );
-  }
-
-  logout(): Promise<void> {
-    return this.supabase.auth.signOut().then(() => {});
-  }
-
-  // --- Internal: set state from user ---
-  private async applyUser(user: { id: string } | null): Promise<void> {
-    this.loggedIn$.next(!!user);
-    this.userId$.next(user?.id ?? null);
-
-    if (!user) {
-      this.displayName$.next(null);
-      this.isAdmin$.next(false);
-      return;
+    const destroy = inject(DestroyRef);
+    void this.refresh();
+    // Do not await other Supabase calls within the auth callback (auth lock).
+    const { data } = this.supabase.auth.onAuthStateChange(() => { setTimeout(() => void this.refresh(), 0); });
+    destroy.onDestroy(() => { this.generation++; data.subscription.unsubscribe(); });
+    if (typeof window !== 'undefined') {
+      const interval = window.setInterval(() => void this.refresh(), 30000);
+      const focus = () => void this.refresh();
+      window.addEventListener('focus', focus);
+      destroy.onDestroy(() => { clearInterval(interval); window.removeEventListener('focus', focus); });
     }
+  }
+  isReady$(): Observable<boolean> { return this.ready.asObservable(); }
+  isReadySnapshot() { return this.ready.value; }
+  isUserAdmin$() { return this.admin.asObservable(); }
+  isUserAdminSnapshot() { return this.admin.value; }
+  isLoggedIn$() { return this.member.asObservable(); }
+  isLoggedInSnapshot() { return this.member.value; }
+  getUserId$() { return this.uid.asObservable(); }
+  getUserIdSnapshot() { return this.uid.value; }
+  getDisplayName$() { return this.name.asObservable(); }
+  getDisplayNameSnapshot() { return this.name.value; }
 
-    // Läs både display_name och role i ett svep
-    const { data, error } = await this.supabase
-      .from('profiles')
-      .select('display_name, role')
-      .eq('id', user.id)
-      .maybeSingle<ProfileRow>();
-
-    if (error) {
-      console.error('Failed to load profile', error);
-      this.displayName$.next(null);
-      this.isAdmin$.next(false);
-      return;
+  async refresh(): Promise<void> {
+    let pending = this.readIdentity(++this.generation);
+    this.latestRefresh = pending;
+    await pending;
+    // A sign-in event can start another refresh while login awaits this one.
+    // Wait for that newer identity before deciding whether login succeeded.
+    while (this.latestRefresh !== pending) {
+      pending = this.latestRefresh!;
+      await pending;
     }
+  }
 
-    this.displayName$.next(data?.display_name ?? null);
-    this.isAdmin$.next((data?.role ?? 'user') === 'admin');
+  private async readIdentity(generation: number): Promise<void> {
+    try {
+      const { data: session, error: sessionError } = await this.supabase.auth.getSession();
+      if (sessionError) throw sessionError;
+      const user = session.session?.user;
+      const result = user ? await this.supabase.rpc('live_identity') : { data: null, error: null };
+      if (result.error) throw result.error;
+      if (generation !== this.generation) return;
+      this.identity = result.data as LeagueIdentity | null;
+      this.uid.next(user?.id ?? null);
+      this.name.next(this.identity?.name ?? null);
+      this.admin.next(this.identity?.is_admin ?? false);
+      this.member.next(!!this.identity);
+    } catch {
+      if (generation !== this.generation) return;
+      this.identity = null;
+      this.admin.next(false);
+      this.name.next(null);
+      this.member.next(false);
+    } finally { if (generation === this.generation) this.ready.next(true); }
+  }
+
+  async redeem(token: string): Promise<void> {
+    const { data } = await this.supabase.auth.getSession();
+    if (!data.session) {
+      const { error } = await this.supabase.auth.signInAnonymously();
+      if (error) throw error;
+    }
+    const { error } = await this.supabase.rpc('live_redeem_invite', { p_token: token });
+    if (error) throw error;
+    await this.refresh();
+    if (!this.identity) throw new Error('Kunde inte läsa medlemskapet. Försök ladda om sidan.');
+  }
+  async loginAdmin(email: string, password: string): Promise<void> {
+    const { error } = await this.supabase.auth.signInWithPassword({ email: email.trim(), password });
+    if (error) throw new Error('Kunde inte logga in. Kontrollera e-post och lösenord.');
+    await this.refresh();
+    if (!this.isUserAdminSnapshot()) {
+      await this.logout();
+      throw new Error('Kontot saknar adminbehörighet i den här ligan. Koppla kontot till din spelare i Supabase först.');
+    }
+  }
+  async logout(): Promise<void> {
+    const { error } = await this.supabase.auth.signOut();
+    if (error) throw error;
+    await this.refresh();
   }
 }

@@ -1,3 +1,4 @@
+import { testProviders } from '../../../testing/test-providers';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { AddPlayerDialog } from './add-player-dialog';
@@ -8,6 +9,7 @@ describe('AddPlayerDialog', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
+      providers: testProviders(),
       imports: [AddPlayerDialog]
     })
     .compileComponents();

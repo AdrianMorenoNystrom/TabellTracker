@@ -1,14 +1,12 @@
 ﻿import { Component, signal, OnInit } from '@angular/core';
-import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
+import { DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { CommonModule } from '@angular/common';
 import { MatIcon } from '@angular/material/icon';
 
-import { RoundlistComponent } from './components/roundlist-component/roundlist-component';
-import { TableComponent } from './components/table-component/table-component';
-import { LoginDialogComponent } from './components/login-dialog/login-dialog.component';
 
 import { AuthService } from './services/auth.service';
 import { avatarLetter } from './utils/avatar';
@@ -25,9 +23,6 @@ import {MatMenuModule} from '@angular/material/menu';
     RouterOutlet,
     MatToolbarModule,
     MatButtonModule,
-    RoundlistComponent,
-    TableComponent,
-    MatDialogModule,
     MatIcon,
     RouterLink,
     RouterLinkActive,
@@ -37,14 +32,21 @@ import {MatMenuModule} from '@angular/material/menu';
   styleUrl: './app.scss',
 })
 export class App implements OnInit {
+  private destroy = inject(DestroyRef);
+  private router = inject(Router);
   protected readonly title = signal('tabelltracker');
   isLoggedIn$!: Observable<boolean>;
   displayLetter$!: Observable<string>;
 
-  constructor(private dialog: MatDialog, public auth: AuthService) {}
+  constructor(public auth: AuthService) {}
 
   ngOnInit() {
     this.isLoggedIn$ = this.auth.isLoggedIn$();
+    this.isLoggedIn$.pipe(takeUntilDestroyed(this.destroy)).subscribe(member => {
+      if (!member && this.auth.isReadySnapshot() && !this.router.url.startsWith('/join') && !this.router.url.startsWith('/admin/login')) {
+        void this.router.navigateByUrl('/join');
+      }
+    });
 
     this.displayLetter$ = this.auth.getDisplayName$().pipe(
       map((name) => avatarLetter(name)),
@@ -53,7 +55,7 @@ export class App implements OnInit {
   }
 
   openLogin() {
-    this.dialog.open(LoginDialogComponent, { width: '420px' });
+    void this.router.navigateByUrl('/admin/login');
   }
 
   logout() {

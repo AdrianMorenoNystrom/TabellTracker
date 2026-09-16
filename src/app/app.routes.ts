@@ -1,14 +1,18 @@
 import { Routes } from '@angular/router';
-import { HomeComponent } from './components/home-component/home.component';
-import { ArticleDetailComponent } from './components/article-detail-component/article-detail.component';
-import { DataComponent } from './components/data-component/data.component';
-import { MatchComponentComponent } from './components/match-component/match-component.component';
-import { authGuard } from './guards/auth.guard';
+import { authGuard, adminGuard } from './guards/auth.guard';
+
+const coupon = () => import('./components/match-component/match-component.component').then(m => m.MatchComponentComponent);
+const join = () => import('./components/join-component/join.component').then(m => m.JoinComponent);
 
 export const appRoutes: Routes = [
-  { path: '', component: HomeComponent },
-  {path: 'data',component:DataComponent},
-  { path: 'matches', component: MatchComponentComponent, canActivate: [authGuard] },
-  { path: 'kronikor/:id', component: ArticleDetailComponent },
-  { path: '**', redirectTo: '' }
+  { path: '', loadComponent: coupon, canActivate: [authGuard] },
+  { path: 'matches', loadComponent: coupon, canActivate: [authGuard] },
+  { path: 'tabell', loadComponent: () => import('./components/home-component/home.component').then(m => m.HomeComponent), canActivate: [authGuard] },
+  { path: 'join', loadComponent: join },
+  { path: 'join/:token', loadComponent: join },
+  { path: 'admin/login', loadComponent: () => import('./components/admin-login/admin-login.component').then(m => m.AdminLoginComponent) },
+  { path: 'admin', loadComponent: () => import('./components/live-admin/live-admin.component').then(m => m.LiveAdminComponent), canActivate: [adminGuard] },
+  { path: 'data', loadComponent: () => import('./components/data-component/data.component').then(m => m.DataComponent), canActivate: [authGuard] },
+  { path: 'kronikor/:id', loadComponent: () => import('./components/article-detail-component/article-detail.component').then(m => m.ArticleDetailComponent), canActivate: [authGuard] },
+  { path: '**', redirectTo: '' },
 ];

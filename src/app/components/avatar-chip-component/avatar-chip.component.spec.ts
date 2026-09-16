@@ -1,3 +1,4 @@
+import { testProviders } from '../../../testing/test-providers';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { AvatarChipComponent } from './avatar-chip.component';
@@ -8,6 +9,7 @@ describe('AvatarChipComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
+      providers: testProviders(),
       imports: [AvatarChipComponent]
     })
     .compileComponents();
