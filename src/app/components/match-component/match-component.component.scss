@@ -1,234 +1,28 @@
-:host {
-  display: block;
-}
-
-.loading-wrapper{
-  display: flex;
-  width: 100%;
-  justify-content: center;
-  height: 20rem;
-  align-items: center;
-}
-
-
-.tip-card { 
-    border-radius: 0px; 
-    display: flex;
-    flex-direction: column;
-    color:#001932;
-    background-color: #FFECEB;
-}
-
-
-.header{
-  display: flex;
-  justify-content: center;
-}
-
-.title{
-    font-family: 'Phudu', sans-serif;
-  font-weight: 800;
-  font-size: 2rem;
-}
-
-.status-row { 
-    margin-bottom: 12px; 
-}
-
-
-mat-chip.ok { opacity: 1; }
-mat-chip.no { opacity: .55; }
-
-.matches { 
-    display: flex;
-    flex-direction: column; 
-    gap: 0.5rem; 
-}
-
-.match {
-  border-left: 5px solid #00427A;
-  border-bottom: 1px solid rgba(0,0,0,0.12);
-  border-top: 1px solid rgba(0,0,0,0.12);
-  padding: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-}
-
-.match:nth-child(odd) {
-  background-color: #FFFFFF;
-}
-
-.match:nth-child(even) {
-  background-color: #F7F9FB;
-}
-
-.main{
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.match-info {
-display: flex;
-flex-direction: row;
-padding: 0.5rem;
-}
-
-.teams{
-    display: flex;
-    gap: 0.2rem;
-    align-items: center;
-    justify-content: center;
-}
-.pick.picked-by-other {
-  opacity: 1;
-  background: rgba(rgb(0, 66, 122), 0.3);
-  border-color: rgba(rgb(0, 66, 122), 0.35);
-  color:rgba(0,0,0,0.7)
-}
-
-.pick:disabled {
-  opacity: 1;
-  cursor: not-allowed;
-  filter: grayscale(1);
-}
-
-.no { 
-  font-weight: 700;
-   opacity: .8; 
-   gap: 0.5rem;
-   margin-bottom: 0.2rem;
-  display: flex;
-  padding:0.3rem;
-  align-items: center;
-  width: fit-content;
-  }
-
-  .teams {
-  font-weight: 600;
-}
-
-.pick-row {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  align-items: center;
-}
-
-.game{
-  display: flex;
-  flex-direction: column;
-}
-
-.percent{
-  justify-content: center;
-  display: flex;
-  margin: 1rem;
-}
-
-.odds{
-  justify-content: center;
-  display: flex;
-  margin-top: 0.5rem;
-}
-
-.pick {
-  height: 42px;
-  border: 1px solid #7D7D80;
-  cursor: pointer;
-  background: transparent;
-  font-weight: 800;
+:host{display:block;background:#f3f5f8;min-height:90vh;color:#18253e}
+.coupon{max-width:760px;margin:auto;padding:24px 16px 60px}header{display:flex;align-items:center;justify-content:space-between;gap:12px}h1{margin:2px 0;font-size:1.8rem}h2{font-size:1rem;margin:0;line-height:1.4}.eyebrow{font-size:.8rem;color:#526482;margin:0}.draw-meta{display:flex;gap:12px;flex-wrap:wrap;align-items:center;font-size:.85rem;margin:8px 0 16px}select,input{max-width:100%;font:inherit;padding:10px;border:1px solid #b4bfd1;border-radius:6px;background:white}button{font:inherit;font-weight:600;min-height:44px;padding:8px 14px;border:1px solid #263b70;border-radius:7px;background:#263b70;color:white;cursor:pointer}button:disabled{cursor:default;opacity:.65}.secondary{background:white;color:#263b70}.banner,.error{padding:12px;border-radius:8px;background:#fff0cb;font-size:.9rem}.error{background:#ffe3e3;color:#832222}.save-status{min-height:20px;margin:6px 0;color:#39584b;font-size:.85rem}.admin-toggle{display:flex;gap:8px;align-items:center;margin:12px 0}.matches{display:grid;gap:12px}.match{background:white;border:1px solid #dce2ec;border-radius:12px;padding:16px}.match.mine{border-left:4px solid #436cbc;padding-left:13px}.match-title{display:flex;gap:10px;align-items:flex-start}.number{display:grid;place-items:center;min-width:26px;height:26px;background:#eef1f7;border-radius:6px;font-weight:bold}.match-title small{color:#61708a;font-size:.73rem}.owner{display:flex;justify-content:space-between;margin:10px 0 12px;font-size:.85rem;color:#3f5477}.owner strong{color:#18253e}.data-row{display:grid;grid-template-columns:minmax(110px,1.5fr) repeat(3,minmax(42px,1fr));gap:6px;align-items:center;text-align:center;font-size:.8rem;min-height:28px}.data-row>:first-child{text-align:left;color:#53627c}.tips{margin-top:8px}.tips button{background:#f5f7fb;color:#344563;border-color:#dce2ec;font-size:1.05rem}.tips button.chosen{background:#263b70;color:white;border-color:#263b70;opacity:1}.result{font-size:.85rem;margin:12px 0 0;color:#754632}.result.correct{color:#186343}.text-button{background:transparent;border:0;color:#294d96;font-size:.8rem;padding:6px}.correction{background:white;padding:20px;border:1px solid #b4bfd1;border-radius:10px;margin-top:20px}.correction label{display:flex;justify-content:space-between;gap:12px;margin:12px 0}.correction button{margin:4px}button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid #b57600;outline-offset:3px}@media(max-width:400px){.coupon{padding:18px 10px}.match{padding:12px}.data-row{grid-template-columns:110px repeat(3,minmax(36px,1fr));gap:4px;font-size:.73rem}h1{font-size:1.5rem}}
+.match.claimed { border-left: 4px solid var(--player-color); padding-left: 13px; }
+.team-status { margin: 20px 0; }
+.team-status h2 { margin-bottom: 10px; }
+.player-statuses { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.player-status { display: flex; flex-direction: column; gap: 6px; padding: 12px; background: white; border: 1px solid #dce2ec; border-left: 4px solid var(--player-color); border-radius: 9px; overflow-wrap: anywhere; }
+.row-state { font-size: .82rem; color: #61708a; }
+.player-heading { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+.four-badge { padding: 3px 7px; border-radius: 5px; background: #263b70; color: white; font-size: .72rem; font-weight: 700; white-space: nowrap; }
+.row-state.complete { color: #186343; font-weight: 700; }
+@media (max-width: 520px) { .player-statuses { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.owner { align-items: center; gap: 12px; margin: 14px 0; }
+.player-name {
+  display: inline-block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  padding: 7px 14px;
+  border: 1px solid color-mix(in srgb, var(--player-color) 55%, white);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--player-color) 16%, white);
+  color: #18253e;
   font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.35;
 }
-
-.pick.active {
-  background: rgba(0, 66, 122, 1);
-  color: white;
-}
-
-.clear {
-  height: 42px;
-  border-radius: 12px;
-  border: 1px solid rgba(0,0,0,.12);
-  background: rgba(0,0,0,.04);
-}
-
-.submit-row {
-  margin-top: 2px;
-  text-align: center;
-  padding: 1rem;
-}
-
-.submit{
-    background-color: rgba(0, 66, 122, 1);
-    color: white;
-    font-size: 1.7rem;
-    height: 3rem;
-    width: 15rem;
-    font-weight: 500;
-}
-
-.submit:disabled {
-  background-color: rgba(200, 200, 200, 1);
-  color: rgb(0, 0, 0,0.5);
-}
-
-@media (min-width: 600px) {
-  :host{
-    max-width: 100%;
-    display: flex;
-    justify-content: center;
-  }
-
-  .tip-card {
-    width: 600px;
-    margin-top: 1rem;
-    margin-bottom: 1rem;
-    background-color: #Ffff;
-  }
-}
-
-/* Ge utrymme så sticky bar inte täcker sista matchen */
-.tip-card {
-  padding-bottom: 3rem;
-}
-
-/* Sticky snapshot bar */
-.sticky-snapshot {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 1000;
-
-  display: flex;
-  justify-content: center;
-
-  padding: 12px 16px;
-
-  background: rgba(255, 236, 235, 0.92);
-  backdrop-filter: blur(8px);
-  border-top: 1px solid rgba(0, 0, 0, 0.12);
-}
-
-/* Knappen */
-.sticky-snapshot .snapshot-button {
-  height: 44px;
-  font-weight: 700;
-  width: min(92vw, 420px);
-  background-color: white;
-}
-
-/* Desktop: lite luftigare, mindre "mobile-feel" */
-@media (min-width: 768px) {
-  .sticky-snapshot {
-    padding: 10px 24px;
-    background: rgba(255, 255, 255, 0.85);
-    width: 100%;
-  }
-
-  .sticky-snapshot .snapshot-button {
-    width: 320px;
-  }
-}
+.player-name.available { background: #f3f5f8; border: 1px dashed #acb8ce; color: #526482; font-weight: 500; }
+@media (max-width: 400px) { .match.claimed { padding-left: 9px; } }

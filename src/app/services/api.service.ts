@@ -5,7 +5,8 @@ import { Player } from '../interfaces/player';
 import { Round, RoundCreate } from '../interfaces/round';
 import { Article } from '../interfaces/article';
 import { Season } from '../interfaces/season';
-import { supabase } from './supabase.client';
+import { SUPABASE } from './supabase.client';
+import { inject } from '@angular/core';
 @Injectable({ providedIn: 'root' })
 export class ApiService {
     private supabase: SupabaseClient;
@@ -15,7 +16,7 @@ export class ApiService {
   private roundsRealtimeInit = false;
 
   constructor() {
-        this.supabase = supabase;
+        this.supabase = inject(SUPABASE);
   }
 
   // --------------------
@@ -66,6 +67,14 @@ export class ApiService {
         }));
       })
     );
+  }
+
+  getNextRound(): Observable<{ round_number: number; four_player_name: string }> {
+    return from(this.supabase.rpc('live_next_round').single()).pipe(map(({ data, error }) => {
+      if (error) throw error;
+      if (!data) throw new Error('Snurran eller aktuell säsong saknas');
+      return data as { round_number: number; four_player_name: string };
+    }));
   }
 
   watchPlayers(): Observable<Player[]> {

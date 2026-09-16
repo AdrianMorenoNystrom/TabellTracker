@@ -13,48 +13,6 @@ import { Player } from '../../interfaces/player';
 import { MatDialog } from '@angular/material/dialog';
 import { AddPlayerDialog } from '../add-player-dialog/add-player-dialog';
 
-/** 
- * Rotation för vem som lägger 4 matcher.
- * Utgår från din beskrivning: Ompen → Sillen → Adrian → Danne → repeat
- */
-const FOUR_ROTATION = ['Ompen', 'Sillen', 'Adrian', 'Danne'] as const;
-type FourName = (typeof FOUR_ROTATION)[number];
-
-/**
- * Räknar ut vem som ska lägga 4 matcher härnäst,
- * baserat på historiken i rounds (där matchesPicked = 4).
- */
-function getNextFourName(rounds: Round[]): string | null {
-  const events: { roundNumber: number; playerName: string }[] = [];
-
-  for (const r of rounds || []) {
-    for (const p of r.players || []) {
-      // matchesPicked kommer från ApiService.getRounds()
-      if ((p as any).matchesPicked === 4) {
-        events.push({ roundNumber: r.roundNumber, playerName: p.name });
-      }
-    }
-  }
-
-  // Ingen historik? börja med första i rotationen
-  if (!events.length) {
-    return FOUR_ROTATION[0];
-  }
-
-  // Ta senaste omgången med 4 matcher
-  events.sort((a, b) => a.roundNumber - b.roundNumber);
-  const last = events[events.length - 1];
-
-  const idx = FOUR_ROTATION.indexOf(last.playerName as FourName);
-  if (idx === -1) {
-    // Om namnet inte finns i rotationen (t.ex. nytt namn) – börja om
-    return FOUR_ROTATION[0];
-  }
-
-  const nextIndex = (idx + 1) % FOUR_ROTATION.length;
-  return FOUR_ROTATION[nextIndex];
-}
-
 @Component({
   selector: 'app-add-round-dialog',
   standalone: true,
@@ -91,19 +49,10 @@ export class AddRoundDialogComponent {
       players: this.fb.array([] as any[]),
     });
 
-    // Hämta rundor -> sätt nästa roundNumber + räkna ut nästa 4-läggare -> ladda spelare med default 3/4 matcher
-    this.api.getRounds().subscribe(rounds => {
-      const lastRound = rounds.reduce(
-        (max, round) => (round.roundNumber > max ? round.roundNumber : max),
-        0
-      );
-
-      this.form.patchValue({
-        roundNumber: lastRound + 1
-      });
-
-      const nextFourName = getNextFourName(rounds);
-      this.loadPlayers(nextFourName || undefined);
+    // Same stored rotation and reserved round numbers as the live coupon importer.
+    this.api.getNextRound().subscribe(next => {
+      this.form.patchValue({ roundNumber: next.round_number });
+      this.loadPlayers(next.four_player_name);
     });
   }
 

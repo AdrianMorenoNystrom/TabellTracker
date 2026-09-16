@@ -1,3 +1,4 @@
+import { testProviders } from '../../../testing/test-providers';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { SnapshotDialogComponent } from './snapshot-dialog.component';
@@ -8,6 +9,7 @@ describe('SnapshotDialogComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
+      providers: testProviders(),
       imports: [SnapshotDialogComponent]
     })
     .compileComponents();
