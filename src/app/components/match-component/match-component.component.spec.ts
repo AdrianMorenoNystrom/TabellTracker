@@ -1,11 +1,13 @@
 import { TestBed, ComponentFixture } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { BehaviorSubject } from 'rxjs';
 import { MatchComponentComponent } from './match-component.component';
 import { AuthService } from '../../services/auth.service';
 import { LiveService } from '../../services/live.service';
 import { LiveEvent, LivePick } from '../../interfaces/live';
 import { testAuth } from '../../../testing/test-providers';
+import { MatDialog } from '@angular/material/dialog';
+import { provideNoopAnimations } from '@angular/platform-browser/animations';
 
 describe('Live coupon', () => {
   let fixture: ComponentFixture<MatchComponentComponent>;
@@ -29,12 +31,43 @@ describe('Live coupon', () => {
       players: [{id:1,name:'Ompen'},{id:2,name:'Sillen'},{id:3,name:'Adrian'},{id:4,name:'Danne'}] });
     service.subscribe.and.callFake((change,status) => { changed = change; status('SUBSCRIBED'); return () => {}; });
     service.save.and.callFake(async (_draw,e,pick,revision,player) => ({event_number:e.event_number,match_id:e.match_id,pick,revision:revision+1,player_id:pick ? player! : null}));
-    await TestBed.configureTestingModule({ imports:[MatchComponentComponent],providers:[provideRouter([]),
+    await TestBed.configureTestingModule({ imports:[MatchComponentComponent],providers:[provideRouter([]),provideNoopAnimations(),
       { provide: LiveService,useValue:service },{provide:AuthService,useValue:{...testAuth,isLoggedIn$:()=>member.asObservable()}}] }).compileComponents();
     fixture=TestBed.createComponent(MatchComponentComponent); component=fixture.componentInstance;
+    spyOn(TestBed.inject(Router),'navigateByUrl').and.resolveTo(true);
     fixture.detectChanges(); await flush();
   });
   afterEach(()=>fixture.destroy());
+  it('opens a frozen overview of all saved signs and owners, ignoring replaced matches', async () => {
+    const event = component.events[0];
+    component.picks.set(1,{event_number:1,match_id:event.match_id,pick:'1X',revision:1,player_id:2});
+    component.picks.set(2,{event_number:2,match_id:'replaced',pick:'2',revision:1,player_id:3});
+    component.openOverview(); await flush();
+    const ref = TestBed.inject(MatDialog).openDialogs[0];
+    const snapshot = ref.componentInstance;
+    expect(snapshot.data.round).toBe(1);
+    expect(snapshot.data.rows.length).toBe(13);
+    expect(snapshot.data.rows[0].pick).toBe('1X');
+    expect(snapshot.data.rows[0].owner).toBe('Sillen');
+    expect(snapshot.data.rows[0].color).toBe(component.playerColor(2));
+    expect(snapshot.data.rows[1].pick).toBe('');
+    component.picks.get(1)!.pick='2'; component.events[0].home_team='Changed';
+    expect(snapshot.data.rows[0].pick).toBe('1X');
+    expect(snapshot.data.rows[0].home).toBe('Home');
+    expect(document.querySelectorAll('app-coupon-overview .selected').length).toBe(2);
+    expect(document.querySelector('app-coupon-overview .incomplete')?.textContent).toContain('12 matcher saknar tips');
+    member.next(false); await flush();
+    expect(TestBed.inject(MatDialog).openDialogs.length).toBe(0);
+  });
+  it('does not open an overview with unsaved or pending selections', () => {
+    component.drafts.set(1,{pick:'1',player:1,match:component.events[0].match_id,revision:0});
+    component.openOverview(); expect(TestBed.inject(MatDialog).openDialogs.length).toBe(0);
+    component.drafts.clear(); component.pending.set(1,1);
+    component.openOverview(); expect(TestBed.inject(MatDialog).openDialogs.length).toBe(0);
+  });
+  it('identifies the four-match player in the team status', () => {
+    expect(fixture.nativeElement.querySelector('.four-badge').parentElement.textContent).toContain('Ompen');
+  });
   it('shows the latest saved market fetch in Swedish time beside refresh', () => {
     component.events[0].odds_retrieved_at = '2026-09-17T12:35:00Z';
     component.events[0].crowd_retrieved_at = '2026-09-17T12:35:00Z';
@@ -69,7 +102,7 @@ describe('Live coupon', () => {
     expect(fixture.nativeElement.textContent).toContain('Sillen');
     expect(fixture.nativeElement.querySelectorAll('.owner').length).toBe(13);
     expect(component.events.every(e=>component.owner(e)===null)).toBeTrue();
-    expect(fixture.nativeElement.textContent).toContain('Ledig');
+    expect([...fixture.nativeElement.querySelectorAll('.owner')].every((owner: any) => owner.textContent.trim() === '')).toBeTrue();
     expect(fixture.nativeElement.querySelectorAll('.tips button').length).toBe(39);
   });
   it('claims any free match, cannot edit another player and never allows three signs', async () => {

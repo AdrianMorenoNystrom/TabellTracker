@@ -1,6 +1,7 @@
 <main class="coupon">
   <header>
-    <div><p class="eyebrow">Stryktipset · {{ connection }}</p><h1>Veckans kupong</h1></div>
+    <div><h1>Stryktipset</h1><p class="eyebrow">{{ connection }}</p></div>
+    <button class="overview-button" (click)="openOverview()" [disabled]="loading || !draw || events.length !== 13 || saving || drafts.size > 0">Översikt</button>
     <div class="refresh-tools">
       @if (draw && events.length) {
         <div class="fetch-status" aria-live="polite">
@@ -18,10 +19,22 @@
       </button>
     </div>
   </header>
-  @if (loading) { <p role="status">Laddar kupongen…</p> }
   @if (error) { <p class="error" role="alert">{{ error }}</p> }
   <p class="save-status" aria-live="polite">{{ saving ? 'Sparar…' : drafts.size ? 'Osparat val' : notice }}</p>
-  @if (draw) {
+  @if (loading) {
+    <section class="matches loading" aria-busy="true" aria-label="Laddar kupongen">
+      <p role="status">Laddar kupongen…</p>
+      @for (row of [1,2,3,4,5]; track row) {
+        <div class="match" aria-hidden="true">
+          <div class="match-title"><span class="number">{{ row }}</span><div class="skeleton team-placeholder"></div></div>
+          <div class="tips">@for (sign of signs; track sign) { <span class="skeleton sign-placeholder"></span> }</div>
+          <div class="data-row"><span>Svenska folket</span><span>–</span><span>–</span><span>–</span></div>
+          <div class="data-row"><span>Odds</span><span>–</span><span>–</span><span>–</span></div>
+          <div class="match-footer"></div>
+        </div>
+      }
+    </section>
+  } @else if (draw) {
     <div class="draw-meta">
       <label>Omgång <select [(ngModel)]="selected" (ngModelChange)="selectDraw()" [disabled]="saving || drafts.size > 0">
         @for (d of draws; track d.draw_number) { <option [ngValue]="d.draw_number">{{ d.round_number }} · {{ time(d.reg_close_time) }}</option> }
@@ -36,9 +49,9 @@
       <div class="player-statuses" aria-live="polite">
         @for (player of players; track player.id) {
           @let state = rowState(player.id);
-          <div class="player-status" [style.--player-color]="playerColor(player.id)">
+          <div class="player-status">
             <div class="player-heading">
-              <strong>{{ player.name }}</strong>
+              <strong class="player-label" [style.--player-color]="playerColor(player.id)">{{ player.name }}</strong>
               @if (player.id === draw.four_player_id) { <span class="four-badge">4 matcher</span> }
             </div>
             <span class="row-state" [class.complete]="state === 'Rad klar ✓'">{{ state }}</span>
@@ -61,41 +74,51 @@
     <div class="matches">
       @for (event of events; track event.event_number) {
         <article class="match" [class.mine]="owner(event) === auth.identity?.player_id"
-          [class.claimed]="owner(event) !== null" [style.--player-color]="playerColor(owner(event))">
+          [style.border-left-color]="owner(event) === null ? 'transparent' : playerColor(owner(event))"
+          [attr.aria-labelledby]="'match-' + event.event_number">
           <div class="match-title"><span class="number">{{ event.event_number }}</span>
-            <div><h2>{{ event.home_team }} <span>–</span> {{ event.away_team }}</h2>
-              <small>{{ event.league }} · {{ time(event.kickoff) }}{{ event.cancelled ? ' · Inställd' : '' }}</small></div>
+            <div class="match-info"><h2 [id]="'match-' + event.event_number">{{ event.home_team }} <span>–</span> {{ event.away_team }}</h2>
+              <div class="owner" [style.--player-color]="playerColor(owner(event))" [attr.title]="owner(event) === null ? null : name(owner(event))">@if (owner(event) !== null) { <strong>{{ name(owner(event)) }}</strong> }</div>
+            </div>
           </div>
-          <div class="owner"><span class="player-name" [class.available]="owner(event) === null">{{ name(owner(event)) }}</span>
-            <strong>{{ pick(event) || 'Ej tippad' }}</strong></div>
-          <div class="data-row"><span>Tecken</span>@for (sign of signs; track sign) { <b>{{ sign }}</b> }</div>
-          <div class="data-row"><span>Svenska Folket</span>@for (sign of signs; track sign; let i = $index) {
-            <span>{{ event.crowd ? (event.crowd[i] * 100 | number:'1.0-0') + '%' : '–' }}</span>
-          }</div>
-          <div class="data-row"><span>Svenska Spels odds</span>@for (sign of signs; track sign; let i = $index) {
-            <span>{{ event.odds ? (event.odds[i] | number:'1.2-2') : '–' }}</span>
-          }</div>
-          @if ((event.odds && event.odds_retrieved_at !== draw.retrieved_at) || (event.crowd && event.crowd_retrieved_at !== draw.retrieved_at)) {
-            <small>Senast giltiga uppgifter · streck {{ time(event.crowd_retrieved_at) }} · odds {{ time(event.odds_retrieved_at) }}</small>
-          }
-          <div class="data-row tips"><span>Tips</span>
+          <span class="tips-label">Tecken</span>
+          <div class="tips">
             @for (sign of signs; track sign) {
               <button [class.chosen]="pick(event).includes(sign)" [disabled]="disabled(event,sign)"
                 [attr.aria-pressed]="pick(event).includes(sign)" [attr.aria-label]="'Match ' + event.event_number + ', tecken ' + sign"
                 (click)="toggle(event,sign)">{{ sign }}</button>
             }
           </div>
-          @if (drafts.has(event.event_number)) { <p role="status">Osparat val</p> }
-          @if (pending.has(event.event_number)) { <small>Sparar…</small> }
-          @if (pick(event) && canEdit(event)) { <button class="text-button" (click)="toggle(event,'')">Rensa</button> }
-          @if (outcome(event); as result) {
-            <p class="result" [class.correct]="correct(event)">Resultat {{ result.outcome }}
-              @if (result.home_score !== null && result.away_score !== null) { · {{ result.home_score }}–{{ result.away_score }} }
-              · {{ correct(event) ? 'Rätt ✓' : (pick(event) ? 'Fel' : 'Tips saknas') }}
-            </p>
-          }
+          <div class="data-row crowd"><span>Svenska folket</span>@for (sign of signs; track sign; let i = $index) {
+            <span>{{ event.crowd ? (event.crowd[i] * 100 | number:'1.0-0') + '%' : '–' }}</span>
+          }</div>
+          <div class="data-row odds"><span>Odds</span>@for (sign of signs; track sign; let i = $index) {
+            <span>{{ event.odds ? (event.odds[i] | number:'1.2-2') : '–' }}</span>
+          }</div>
+          <div class="match-footer">
+            <div class="match-feedback">
+              <div class="result" [class.correct]="correct(event)" [attr.title]="(event.league || '') + ' · ' + time(event.kickoff)">
+                @if (outcome(event); as result) {
+                  Resultat {{ result.outcome }}
+                  @if (result.home_score !== null && result.away_score !== null) { · {{ result.home_score }}–{{ result.away_score }} }
+                  · {{ correct(event) ? 'Rätt ✓' : (pick(event) ? 'Fel' : 'Tips saknas') }}
+                } @else {
+                  <span class="match-meta">{{ event.league }}{{ event.league && event.kickoff ? ' · ' : '' }}{{ event.kickoff ? time(event.kickoff) : '' }}{{ event.cancelled ? ' · Inställd' : '' }}</span>
+                }
+              </div>
+              <div class="match-note" role="status">
+                @if (drafts.has(event.event_number)) { Osparat val }
+                @else if (pending.has(event.event_number)) { Sparar… }
+                @else if ((event.odds && event.odds_retrieved_at !== draw.retrieved_at) || (event.crowd && event.crowd_retrieved_at !== draw.retrieved_at)) {
+                  <span [attr.title]="'Svenska folket: ' + time(event.crowd_retrieved_at) + ' · Odds: ' + time(event.odds_retrieved_at)">Senast giltiga uppgifter · odds {{ time(event.odds_retrieved_at) }} · folket {{ time(event.crowd_retrieved_at) }}</span>
+                }
+              </div>
+            </div>
+            <button class="text-button clear" [style.visibility]="pick(event) && canEdit(event) ? 'visible' : 'hidden'"
+              [attr.aria-label]="'Rensa tips för match ' + event.event_number" (click)="toggle(event,'')">Rensa</button>
+          </div>
           @if (adminMode && auth.isUserAdminSnapshot() && locked) {
-            <button class="text-button" (click)="correctingResult = event.event_number">Korrigera resultat</button>
+            <button class="text-button result-edit" (click)="correctingResult = event.event_number">Korrigera resultat</button>
           }
         </article>
       }

@@ -36,3 +36,7 @@ html, body {
     max-height: calc(100dvh - 9.5rem);
   }
 }
+
+.coupon-overview-dialog .mat-mdc-dialog-surface {
+  border-radius: 0;
+}
