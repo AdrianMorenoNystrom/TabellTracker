@@ -219,6 +219,20 @@ export class MatchComponentComponent implements OnInit {
     catch (error) { this.error = (error as Error).message; }
     finally { this.refreshing = false; }
   }
+  get marketUpdates() {
+    const latest = (field: 'odds' | 'crowd') => {
+      const timestamps = this.events
+        .filter(event => event[field] !== null)
+        .map(event => Date.parse(event[`${field}_retrieved_at`] ?? ''))
+        .filter(Number.isFinite);
+      return timestamps.length ? new Date(Math.max(...timestamps)).toISOString() : null;
+    };
+    const odds = latest('odds');
+    const crowd = latest('crowd');
+    return odds === crowd
+      ? [{ label: 'Odds & Svenska folket', at: odds }]
+      : [{ label: 'Odds', at: odds }, { label: 'Svenska folket', at: crowd }];
+  }
   time(value: string | null) {
     return value ? new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Stockholm', dateStyle: 'short', timeStyle: 'short' }).format(new Date(value)) : 'Tid saknas';
   }

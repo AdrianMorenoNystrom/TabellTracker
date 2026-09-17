@@ -35,6 +35,34 @@ describe('Live coupon', () => {
     fixture.detectChanges(); await flush();
   });
   afterEach(()=>fixture.destroy());
+  it('shows the latest saved market fetch in Swedish time beside refresh', () => {
+    component.events[0].odds_retrieved_at = '2026-09-17T12:35:00Z';
+    component.events[0].crowd_retrieved_at = '2026-09-17T12:35:00Z';
+    component.events[1].odds_retrieved_at = '2026-09-17T11:00:00Z';
+    fixture.detectChanges();
+    const status = fixture.nativeElement.querySelector('.refresh-tools .fetch-status');
+    expect(status.textContent).toContain('Odds & Svenska folket');
+    expect(status.textContent).toContain('14:35');
+    expect(status.querySelectorAll('time').length).toBe(1);
+    expect(status.querySelector('time').getAttribute('datetime')).toBe('2026-09-17T12:35:00.000Z');
+  });
+  it('keeps separate market timestamps when only odds are refreshed', () => {
+    component.events[0].odds_retrieved_at = '2026-09-17T12:35:00Z';
+    component.events[0].crowd_retrieved_at = '2026-09-17T11:00:00Z';
+    expect(component.marketUpdates).toEqual([
+      {label:'Odds',at:'2026-09-17T12:35:00.000Z'},
+      {label:'Svenska folket',at:'2026-09-17T11:00:00.000Z'},
+    ]);
+  });
+  it('does not invent market fetch times from a page reload or failed refresh', async () => {
+    expect(component.marketUpdates[0].at).toBeNull();
+    component.events[0].odds_retrieved_at = '2026-09-17T12:35:00Z';
+    component.events[0].crowd_retrieved_at = '2026-09-17T12:35:00Z';
+    const before = component.marketUpdates;
+    service.sync.and.rejectWith(new Error('Offline'));
+    await component.refresh();
+    expect(component.marketUpdates).toEqual(before);
+  });
   it('shows all 13 matches as available, plus real odds and percentages', () => {
     expect(fixture.nativeElement.querySelectorAll('article.match').length).toBe(13);
     expect(fixture.nativeElement.textContent).toContain('68%');

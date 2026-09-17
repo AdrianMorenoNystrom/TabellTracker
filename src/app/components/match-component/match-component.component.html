@@ -1,9 +1,22 @@
 <main class="coupon">
   <header>
     <div><p class="eyebrow">Stryktipset · {{ connection }}</p><h1>Veckans kupong</h1></div>
-    <button class="secondary" (click)="refresh()" [disabled]="refreshing || now < refreshAfter">
-      {{ refreshing ? 'Hämtar…' : 'Uppdatera' }}
-    </button>
+    <div class="refresh-tools">
+      @if (draw && events.length) {
+        <div class="fetch-status" aria-live="polite">
+          @for (update of marketUpdates; track update.label) {
+            <div>{{ update.label }}<br>
+              @if (update.at) {
+                <time [attr.datetime]="update.at">Hämtat {{ time(update.at) }}</time>
+              } @else { <span>Inte hämtat</span> }
+            </div>
+          }
+        </div>
+      }
+      <button class="secondary" (click)="refresh()" [disabled]="refreshing || now < refreshAfter">
+        {{ refreshing ? 'Hämtar…' : 'Uppdatera' }}
+      </button>
+    </div>
   </header>
   @if (loading) { <p role="status">Laddar kupongen…</p> }
   @if (error) { <p class="error" role="alert">{{ error }}</p> }
