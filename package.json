@@ -8,6 +8,7 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "test:server": "node --test tests/*.test.mjs",
+    "test:ui": "node tests/ui/coupon-layout.cjs",
     "typecheck": "tsc --noEmit -p tsconfig.app.json"
   },
   "prettier": {
@@ -54,6 +55,7 @@
     "karma-coverage": "~2.2.0",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
+    "playwright": "^1.63.0",
     "typescript": "~5.9.2"
   }
 }

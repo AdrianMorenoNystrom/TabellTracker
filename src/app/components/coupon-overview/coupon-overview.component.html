@@ -1,0 +1,38 @@
+<section class="overview">
+  <header>
+    <div><h2 id="coupon-overview-title">Översikt</h2><p>Omgång {{ data.round }} · {{ picked }}/13 matcher tippade</p></div>
+    <button mat-dialog-close>Stäng</button>
+  </header>
+  <div class="metadata">
+    <span>Spelstopp {{ data.closesAt }}</span>
+    <span>Stillbild {{ data.capturedAt }}</span>
+  </div>
+  <div class="players">
+    @for (player of data.players; track player.name) {
+      <span [style.border-left-color]="player.color">{{ player.name }}</span>
+    }
+  </div>
+  <div class="system" tabindex="0" aria-label="Lagets sparade system">
+    <table aria-label="Alla 13 matcher och valda tecken">
+      <colgroup><col><col class="sign-column"><col class="sign-column"><col class="sign-column"></colgroup>
+      <thead><tr><th scope="col">Match</th>@for (sign of signs; track sign) { <th scope="col">{{ sign }}</th> }</tr></thead>
+      <tbody>
+        @for (row of data.rows; track row.number) {
+          <tr [style.--player-color]="row.color" [class.missing]="!row.pick">
+            <th scope="row" [attr.title]="row.home + ' – ' + row.away + ' · ' + row.owner">
+              <div class="match-name"><span class="number">{{ row.number }}</span><span class="teams">
+                <span>{{ row.home }}</span><span>{{ row.away }}</span>
+              </span></div>
+            </th>
+            @for (sign of signs; track sign) {
+              <td [attr.aria-label]="'Match ' + row.number + ', ' + sign + (row.pick.includes(sign) ? ' vald' : ' ej vald')">
+                <span class="sign" [class.selected]="row.pick.includes(sign)">{{ row.pick.includes(sign) ? sign : '–' }}</span>
+              </td>
+            }
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  @if (picked < 13) { <p class="incomplete">{{ 13 - picked }} {{ 13 - picked === 1 ? 'match saknar' : 'matcher saknar' }} tips.</p> }
+</section>

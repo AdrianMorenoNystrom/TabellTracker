@@ -1,0 +1,29 @@
+:host { display: block; color: #000; background: #fff; }
+* { box-sizing: border-box; font-family: Arial, Helvetica, sans-serif; }
+.overview { display: flex; flex-direction: column; max-height: 100dvh; padding: 12px; font-size: 12px; line-height: 1.3; font-variant-numeric: tabular-nums; }
+header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+h2 { margin: 0; font-size: 20px; color: #00427a; }
+p { margin: 4px 0; }
+button { flex-shrink: 0; min-height: 44px; padding: 8px 12px; border: 1px solid #e4e6e8; background: #fff; color: #00427a; font-weight: 700; cursor: pointer; }
+button:focus-visible, .system:focus-visible { outline: 2px solid #00427a; outline-offset: -2px; }
+.metadata { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 8px; color: #333; font-size: 10px; margin: 4px 0 8px; }
+.players { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-bottom: 8px; }
+.players span { border-left: 3px solid; padding-left: 5px; }
+.system { min-height: 0; overflow: auto; border-top: 2px solid #00427a; }
+table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.sign-column { width: 40px; }
+thead { color: #333; font-size: 11px; }
+thead th { padding: 4px; }
+thead th:first-child { text-align: left; }
+tbody tr { height: 36px; border-bottom: 1px solid #e4e6e8; }
+tbody tr:nth-child(even) { background: #f7f9fb; }
+tbody th { border-left: 3px solid var(--player-color); font-weight: 400; text-align: left; padding: 3px 4px; }
+.match-name { display: flex; align-items: center; gap: 6px; }
+.number { flex: 0 0 18px; font-weight: 700; text-align: center; color: #00427a; }
+.teams { min-width: 0; }
+.teams span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+td { padding: 3px; text-align: center; }
+.sign { display: grid; place-items: center; height: 28px; border: 1px solid #e4e6e8; color: #666; font-weight: 700; }
+.sign.selected { background: #00427a; border-color: #00427a; color: white; font-size: 15px; }
+.incomplete { flex-shrink: 0; padding: 6px 0 0; color: #805700; }
+@media (max-width: 360px) { .overview { padding: 8px; } .sign-column { width: 34px; } .players { gap: 8px; } }

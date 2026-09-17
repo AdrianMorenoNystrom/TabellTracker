@@ -7,6 +7,8 @@ import { AuthService } from '../../services/auth.service';
 import { LiveService } from '../../services/live.service';
 import { LiveDraw, LiveEvent, LivePick, LivePlayer, LiveResult } from '../../interfaces/live';
 import { avatarColor } from '../../utils/avatar-color';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { CouponOverviewComponent, CouponOverviewData } from '../coupon-overview/coupon-overview.component';
 
 @Component({
   standalone: true, selector: 'app-match-component',
@@ -19,6 +21,8 @@ export class MatchComponentComponent implements OnInit {
   private service = inject(LiveService);
   private destroy = inject(DestroyRef);
   private router = inject(Router);
+  private dialog = inject(MatDialog);
+  private overview?: MatDialogRef<CouponOverviewComponent>;
   readonly signs = ['1', 'X', '2'];
   draws: LiveDraw[] = [];
   draw: LiveDraw | null = null;
@@ -71,12 +75,14 @@ export class MatchComponentComponent implements OnInit {
     window.addEventListener('beforeunload', unload);
     this.auth.isLoggedIn$().pipe(takeUntilDestroyed(this.destroy)).subscribe(member => {
       if (!member) {
+        this.overview?.close();
         this.events = []; this.picks.clear(); this.results.clear(); this.optimistic.clear(); this.optimisticPlayers.clear(); this.drafts.clear();
         this.saveEpoch++; this.loadGeneration++;
         void this.router.navigateByUrl('/join');
       }
     });
     this.destroy.onDestroy(() => {
+      this.overview?.close();
       this.disposed = true; this.loadGeneration++;
       unsubscribe(); clearInterval(clock); clearInterval(fallback); clearTimeout(this.reloadTimer);
       window.removeEventListener('focus', focus); window.removeEventListener('beforeunload', unload);
@@ -218,6 +224,28 @@ export class MatchComponentComponent implements OnInit {
     try { this.notice = await this.service.sync(); await this.reload(); }
     catch (error) { this.error = (error as Error).message; }
     finally { this.refreshing = false; }
+  }
+  openOverview() {
+    if (this.loading || !this.draw || this.events.length !== 13 || this.saving || this.drafts.size || this.overview) return;
+    const data: CouponOverviewData = {
+      round: this.draw.round_number,
+      capturedAt: this.time(new Date().toISOString()),
+      closesAt: this.time(this.draw.reg_close_time),
+      players: this.players.map(player => ({ name: player.name, color: this.playerColor(player.id) })),
+      rows: [...this.events].sort((a, b) => a.event_number - b.event_number).map(event => {
+        const saved = this.picks.get(event.event_number);
+        const pick = saved?.match_id === event.match_id ? saved.pick : '';
+        const owner = saved?.match_id === event.match_id ? saved.player_id : event.player_id;
+        return { number: event.event_number, home: event.home_team, away: event.away_team, pick,
+          owner: this.name(owner), color: owner === null ? 'transparent' : this.playerColor(owner) };
+      }),
+    };
+    this.overview = this.dialog.open(CouponOverviewComponent, {
+      data, width: '560px', maxWidth: '100vw', maxHeight: '100dvh',
+      panelClass: 'coupon-overview-dialog', ariaLabelledBy: 'coupon-overview-title',
+      autoFocus: 'button', restoreFocus: true,
+    });
+    this.overview.afterClosed().pipe(takeUntilDestroyed(this.destroy)).subscribe(() => { this.overview = undefined; });
   }
   get marketUpdates() {
     const latest = (field: 'odds' | 'crowd') => {
