@@ -37,6 +37,7 @@ html, body {
   }
 }
 
-.coupon-overview-dialog .mat-mdc-dialog-surface {
+.coupon-overview-dialog .mat-mdc-dialog-surface,
+.player-colors-dialog .mat-mdc-dialog-surface {
   border-radius: 0;
 }

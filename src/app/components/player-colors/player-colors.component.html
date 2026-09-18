@@ -1,0 +1,12 @@
+<section>
+  <header><h2 id="player-colors-title">Spelarfärger</h2><button mat-dialog-close>Stäng</button></header>
+  <p>Sparas i den här webbläsaren.</p>
+  @for (player of players; track player.id) {
+    <label [style.border-left-color]="color(player.name)">
+      <strong>{{ player.name }}</strong>
+      <input type="color" [value]="color(player.name)" [attr.aria-label]="'Färg för ' + player.name" (change)="choose(player.name, $event)">
+    </label>
+  }
+  @if (error) { <p class="error" role="alert">{{ error }}</p> }
+  <button class="reset" (click)="reset()">Återställ standardfärger</button>
+</section>

@@ -83,6 +83,36 @@ const path = require('node:path');
   await page.locator('article.match').nth(12).waitFor();
   await page.waitForFunction(() => document.querySelector('.eyebrow')?.textContent.trim() === 'Live');
   const report = [];
+  // Colours are local preferences, persisted across reloads and shared by each display.
+  const standardColours = await page.locator('.player-label').evaluateAll(labels=>labels.map(el=>getComputedStyle(el).borderLeftColor));
+  assert.equal(new Set(standardColours).size,4,'four distinct default player colours');
+  await page.setViewportSize({width:320,height:667});
+  await page.getByRole('button',{name:'Färger',exact:true}).click();
+  const colours = page.getByRole('dialog',{name:'Spelarfärger',exact:true});
+  await colours.waitFor();
+  await colours.getByLabel('Färg för Adrian').fill('#007788');
+  await colours.getByLabel('Färg för Adrian').dispatchEvent('change');
+  await page.waitForFunction(()=>getComputedStyle(document.querySelectorAll('.player-label')[2]).borderLeftColor==='rgb(0, 119, 136)');
+  await page.waitForFunction(() => [...document.querySelectorAll('.mat-mdc-dialog-container, .mat-mdc-dialog-surface')]
+    .every(el => getComputedStyle(el).opacity === '1' && el.getAnimations().every(animation => animation.playState === 'finished')));
+  assert.ok(await colours.evaluate(el=>el.scrollWidth<=el.clientWidth));
+  await page.screenshot({path:path.join(directory,'player-colours-320.png')});
+  await colours.getByRole('button',{name:'Stäng',exact:true}).click();
+  await colours.waitFor({state:'hidden'});
+  await page.reload();
+  await page.locator('article.match').nth(12).waitFor();
+  assert.equal(await page.locator('article.match').first().evaluate(el=>getComputedStyle(el).borderLeftColor),'rgb(0, 119, 136)');
+  await page.getByRole('button',{name:'Översikt',exact:true}).click();
+  const colouredOverview = page.getByRole('dialog',{name:'Översikt',exact:true});
+  await colouredOverview.waitFor();
+  assert.equal(await colouredOverview.locator('tbody th').first().evaluate(el=>getComputedStyle(el).borderLeftColor),'rgb(0, 119, 136)');
+  await colouredOverview.getByRole('button',{name:'Stäng',exact:true}).click();
+  await colouredOverview.waitFor({state:'hidden'});
+  await page.getByRole('button',{name:'Färger',exact:true}).click();
+  await colours.getByRole('button',{name:'Återställ standardfärger',exact:true}).click();
+  await colours.getByRole('button',{name:'Stäng',exact:true}).click();
+  await colours.waitFor({state:'hidden'});
+  assert.deepEqual(await page.locator('.player-label').evaluateAll(labels=>labels.map(el=>getComputedStyle(el).borderLeftColor)),standardColours);
   // The legend and match accents use the same player colours.
   assert.equal(await page.locator('.player-label').nth(2).evaluate(el=>getComputedStyle(el).borderLeftColor),
     await page.locator('article.match').first().evaluate(el=>getComputedStyle(el).borderLeftColor));
