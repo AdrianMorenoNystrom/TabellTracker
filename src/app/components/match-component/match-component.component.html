@@ -45,7 +45,7 @@
     @if (draw.status === 'draft' && !locked) { <p class="banner">Kupongen har inte öppnat ännu.</p> }
     @if (stale) { <p class="banner">Senast sparade uppgifter visas. Senaste hämtning: {{ time(draw.retrieved_at) }}.</p> }
     <section class="team-status" aria-labelledby="team-status-title">
-      <h2 id="team-status-title">Lagets rader</h2>
+      <div class="team-heading"><h2 id="team-status-title">Lagets rader</h2><button class="text-button" (click)="openColors()">Färger</button></div>
       <div class="player-statuses" aria-live="polite">
         @for (player of players; track player.id) {
           @let state = rowState(player.id);

@@ -9,6 +9,7 @@ import { LiveDraw, LiveEvent, LivePick, LivePlayer, LiveResult } from '../../int
 import { avatarColor } from '../../utils/avatar-color';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { CouponOverviewComponent, CouponOverviewData } from '../coupon-overview/coupon-overview.component';
+import { PlayerColorsComponent } from '../player-colors/player-colors.component';
 
 @Component({
   standalone: true, selector: 'app-match-component',
@@ -23,6 +24,7 @@ export class MatchComponentComponent implements OnInit {
   private router = inject(Router);
   private dialog = inject(MatDialog);
   private overview?: MatDialogRef<CouponOverviewComponent>;
+  private colorsDialog?: MatDialogRef<PlayerColorsComponent>;
   readonly signs = ['1', 'X', '2'];
   draws: LiveDraw[] = [];
   draw: LiveDraw | null = null;
@@ -76,6 +78,7 @@ export class MatchComponentComponent implements OnInit {
     this.auth.isLoggedIn$().pipe(takeUntilDestroyed(this.destroy)).subscribe(member => {
       if (!member) {
         this.overview?.close();
+        this.colorsDialog?.close();
         this.events = []; this.picks.clear(); this.results.clear(); this.optimistic.clear(); this.optimisticPlayers.clear(); this.drafts.clear();
         this.saveEpoch++; this.loadGeneration++;
         void this.router.navigateByUrl('/join');
@@ -83,6 +86,7 @@ export class MatchComponentComponent implements OnInit {
     });
     this.destroy.onDestroy(() => {
       this.overview?.close();
+      this.colorsDialog?.close();
       this.disposed = true; this.loadGeneration++;
       unsubscribe(); clearInterval(clock); clearInterval(fallback); clearTimeout(this.reloadTimer);
       window.removeEventListener('focus', focus); window.removeEventListener('beforeunload', unload);
@@ -246,6 +250,16 @@ export class MatchComponentComponent implements OnInit {
       autoFocus: 'button', restoreFocus: true,
     });
     this.overview.afterClosed().pipe(takeUntilDestroyed(this.destroy)).subscribe(() => { this.overview = undefined; });
+  }
+  openColors() {
+    if (!this.players.length || this.colorsDialog) return;
+    this.colorsDialog = this.dialog.open(PlayerColorsComponent, {
+      data: this.players.map(player => ({ ...player })),
+      width: '400px', maxWidth: 'calc(100vw - 16px)', maxHeight: '100dvh',
+      panelClass: 'player-colors-dialog', ariaLabelledBy: 'player-colors-title',
+      autoFocus: 'button', restoreFocus: true,
+    });
+    this.colorsDialog.afterClosed().pipe(takeUntilDestroyed(this.destroy)).subscribe(() => { this.colorsDialog = undefined; });
   }
   get marketUpdates() {
     const latest = (field: 'odds' | 'crowd') => {

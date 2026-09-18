@@ -27,3 +27,9 @@ Referensbilden saknades i den mottagna bilagan. Layouten följer den utförliga 
 ## Översikt
 
 Knappen högst upp öppnar en kompakt stillbild av lagets sparade tecken. Färgmarkeringarna vid spelarnamnen och matcherna använder samma befintliga spelarfärger. Inga nya anrop görs och inga tips ändras i översikten. Den kan öppnas när alla lokala teckenval är sparade; ej tippade matcher visas med streck och ett antal saknade tips. Stäng och öppna igen för att få en ny stillbild. Översikten stängs om medlemskapet återkallas eller användaren lämnar kupongvyn.
+
+## Spelarfärger
+
+Knappen **Färger** vid Lagets rader låter dig välja en färg för varje spelare. Standarderna är Ompen blå, Sillen orange, Adrian grön och Danne rosa. De är fasta för att undvika att flera spelare får samma färg från en namnberäkning.
+
+Egna val sparas endast i den här webbläsarens localStorage, under `stryktipstabellen-player-colors-v1`. De följer inte med till en annan enhet och ändrar inte andra spelares färger på deras enheter. **Återställ standardfärger** tar bort dina lokala val för lagets spelare. Inga databasändringar krävs. Layouttestet kontrollerar färgval, omladdning, översikt och återställning på 320 px.
