@@ -1,0 +1,189 @@
+SAMMANFATTNING FÖR CHATGPT – STRYKTIPSTABELLEN
+Datum: 19 september 2026
+
+Detta är en överlämning av tidigare arbete och diskussioner. Använd den som bakgrund till användarens nästa fråga. Skilj mellan sådant som redan är implementerat och idéer som bara har diskuterats. Ingen notifiering till Snapchat har implementerats eller skickats.
+
+1. PROJEKT OCH ARBETSSÄTT
+
+Projekt: Stryktipstabellen, repository TabellTracker.
+Lokal projektmapp: C:\tabelltracker\TabellTracker
+Aktuell branch vid sammanställningen: style-fixes,-mainly-regarding-account-and-user
+Teknik: Angular 20, TypeScript, SCSS, Angular Material, Supabase Auth/Postgres/Realtime och Supabase Edge Functions.
+Utvecklingsadress: http://localhost:4200/ när npm start körs.
+
+Fyra spelare: Ompen, Sillen, Adrian och Danne.
+Användaren vill ha enkla svenska förklaringar och konkreta ändringar utan onödiga bekräftelsefrågor. Mobilvyn är särskilt viktig.
+
+Senare ändringar har främst gällt UI/UX. Tipparregler, autosave, auth, realtime och backend ska inte ändras bara för designens skull.
+
+Git-arbetsytan var ren när denna sammanställning påbörjades. Den här textfilen är en ny leverans. Tidigare verifieringar visar att koden fungerar lokalt, men bekräftar inte att motsvarande ändringar är driftsatta i produktion. Assistenten har inte publicerat eller deployat ändringarna under arbetet som sammanfattas här.
+
+2. VIKTIGA REGLER OCH BEFINTLIG FUNKTIONALITET
+
+- Alla 13 matcher är fria att välja. Det finns INGEN fast fördelning av matchnummer mellan spelarna.
+- Tre spelare ska lägga tre matcher vardera: två halvor och en spik.
+- En spelare ska lägga fyra matcher: två halvor och två spikar.
+- En spik är ett valt tecken. En halva skapas genom att välja två av 1/X/2. Det finns ingen separat halv-knapp. Tre tecken får inte väljas.
+- Admin kan ändra rotationsordningen för vem som har fyra matcher. Rotation gäller kvoten, inte vilka matcher någon äger.
+- Matcher får en ägare när spelaren väljer och sparar sitt tips. Sparande, konflikthantering och realtime finns.
+- En tillfällig första markering som måste bli en halva kan ligga som lokalt osparat val tills det andra tecknet valts. Kvotreglerna ska inte kringgås.
+- Spelstopp hanteras både i gränssnittet och på serversidan.
+- Omgångsnumret som visas ska följa ligans egna omgångar, inte Svenska Spels interna API-nummer. draw_number är leverantörens interna identifierare; round_number är ligans synliga omgångsnummer.
+
+API-hämtning och automatisk rättning finns i Supabase Edge Function stryktipset-sync. När alla nödvändiga officiella resultat och kompletta spelarrader finns kan omgången rättas och historiska tabeller uppdateras. Schemalagd körning kräver att Supabase-funktion, hemligheter och cron faktiskt är konfigurerade. Detta är inte verifierat för aktuell produktion.
+
+Admin har separat permanent inloggning med e-post/lösenord. Andra spelare kan aktivera enheter via inbjudningslänkar. Ett tidigare fel där inbjudningstoken försvann när en utloggad besökare öppnade länken har rättats i Angulars navigeringshantering och regressionstestats.
+
+RLS och behörigheter hanteras i migrationsfilerna. Service-role-nycklar ska aldrig placeras i frontend.
+
+3. NUVARANDE UTSEENDE PÅ KUPONGEN
+
+Användaren beställde en visuell omarbetning tydligt inspirerad av Svenska Spels Stryktipsvy. Den omtalade referensbilden saknades i den mottagna bilagan; implementationen följer användarens detaljerade textspecifikation.
+
+Design:
+- Primärblå: #00427A.
+- Ytor: #FFFFFF och #F7F9FB.
+- Separatorer: #E4E6E8.
+- Grundtext: #000000 och #333333.
+- Raka, sammanhängande matchrader med tunna separatorer och subtilt alternerande bakgrunder.
+- Blå matchnummercirklar och raka 1/X/2-knappar. Valda tecken är blå med vit text.
+- Desktop har en flexibel namnkolumn och tre lika breda teckenkolumner. Procent och odds följer samma kolumner med CSS subgrid.
+- Under 600 px får matchnamnet en egen rad. Tecknen, procenten och oddsen fortsätter vara vertikalt linjerade.
+- Arial används lokalt i kupongen, eftersom sajtens globala Phudu är ett displaytypsnitt.
+- Undvik stora kort, färgade helrader, gradients, stora rundningar och mycket hjälptext.
+
+Senare uttryckliga önskemål, som ska bevaras:
+- Raden ”Dina tips” med halvor/spikar/matchräknare är borttagen.
+- ”Lagets rader” finns kvar och visar vilka som har börjat respektive är klara.
+- Den som har fyra matcher får en tydlig mörkblå etikett med fet vit text: ”4 matcher”.
+- Spelarnas namn ovanför kupongen har färgmarkeringar.
+- Varje vald match har spelarens färg som vertikalt streck längst till vänster.
+- Under matchnamnet visas endast spelarens namn, större och i fet mörkblå text, med en svag bakgrundston av spelarens färg.
+- Visa INTE ”Tagen av”, ”Ledig” eller ”Du” efter det egna namnet på matchraderna.
+- Tomt utrymme för ägarnamn/status behålls där det behövs för att undvika layoutskiften vid realtime.
+
+Vid Uppdatera-knappen visas senaste sparade hämtningstid för odds och Svenska folkets procent. Om källorna har olika tidpunkter visas de separat. Tiden ändras inte bara för att sidan laddas om eller för att ett hämtningsförsök misslyckas.
+
+4. ÖVERSIKT / SNAPSHOT – IMPLEMENTERAT
+
+Knappen ”Översikt” högst upp öppnar en kompakt dialog med hela lagets system, anpassad för att läsa av på mobilen och manuellt föra över till Svenska Spels app.
+
+Den visar:
+- Ligans omgångsnummer och antal tippade matcher.
+- Spelstopp och tidpunkt för stillbilden.
+- Spelarnas färger.
+- Alla 13 matchnummer, lagnamn och sparade tecken.
+- Tydlig information när matcher saknar tips.
+
+Översikten är en fryst kopia av sparade uppgifter. Den ändras inte av realtime medan den är öppen. Stäng och öppna igen för en ny stillbild. Den går inte att öppna medan lokala val är osparade eller håller på att sparas.
+
+Den ändrar inga tips, gör inget automatiskt spelinlämnande och har ingen funktion för att spara/exportera själva bilden. Bildexport har bara föreslagits.
+
+Dialogen kan stängas med knapp eller Escape och återställer fokus. Den stängs också vid återkallat medlemskap eller när kupongvyn lämnas.
+
+5. VALBARA SPELARFÄRGER – IMPLEMENTERAT UTAN DATABASÄNDRING
+
+Den gamla beräkningen från namn gav vissa spelare identiska färger. De fyra befintliga spelarna har nu separata, fasta standardfärger:
+- Ompen: blå, #2563EB.
+- Sillen: orange, #D97706.
+- Adrian: grön, #15803D.
+- Danne: rosa, #C02673.
+
+Vid ”Lagets rader” finns knappen ”Färger”. Den öppnar färgval för varje spelare samt ”Återställ standardfärger”.
+
+Egna färger sparas i localStorage under nyckeln:
+stryktipstabellen-player-colors-v1
+
+VIKTIG BEGRÄNSNING:
+Det är lokala visningsinställningar för den aktuella webbläsaren/originen. De synkas INTE till andra enheter eller andra spelares webbläsare. Varje användare kan ändra hur spelarna visas lokalt. Detta är inte en gemensam profilfärg sparad på servern.
+
+Färgerna används av den gemensamma avatarColor-funktionen, bland annat vid spelarnamn, matchernas sidostreck, namnens bakgrundston och när en ny översikt skapas. Felaktiga lagrade färger ignoreras. Om webbläsaren blockerar lagring fungerar standardfärgerna fortfarande och misslyckat sparande visas som ett fel.
+
+6. SENASTE DISKUSSIONEN: MEDDELA ATT RESULTATET FINNS
+
+Användaren frågade om ett bra sätt att meddela spelarna när nya resultat finns. Gruppen använder SNAPCHAT.
+
+Diskuterade alternativ, INTE implementerade:
+- En knapp ”Kopiera resultat” som skapar ett färdigt meddelande med omgång, spelarnas poäng och länk till tabellen/resultatet. Admin klistrar sedan in meddelandet i Snapchat-gruppen.
+- En resultatbild att spara och manuellt skicka till gruppen.
+- Tidigare diskuterades delning via mobilens delningsmeny och automatisk Telegram-notifiering, men användaren uppgav därefter Snapchat.
+
+Senaste rekommendationen var ”Kopiera resultat”, eftersom det är enkelt och inte kräver någon databasändring.
+
+I den granskade officiella dokumentationen hittades inget stöd för automatiska utskick till en Snapchat-grupp. Det dokumenterade delningsflödet bygger på att användaren själv väljer mottagare och skickar. Snapchat for Webs Share Sheet gäller desktop; lova inte att det är en automatisk mobil/gruppintegration.
+
+Granskade källor:
+https://developers.snap.com/api/snapchat-for-web/social-plugins/share-link-to-snapchat
+https://developers.snap.com/snap-kit/creative-kit/web
+https://developer.mozilla.org/en-US/docs/Web/API/Navigator/share
+
+Användaren har ännu inte valt att implementera textdelning eller bildexport. Den senaste beställningen är endast att skapa denna sammanfattning som .txt för ChatGPT. Inga meddelanden har skickats till spelarna.
+
+Andra förslag som bara diskuterats:
+- Tydligare spelstopp med veckodag och eventuell nedräkning.
+- Markera manuellt vilka matcher som förts över till Svenska Spels app.
+- Visa ”Nya tips finns” om systemet ändras bakom en öppen stillbild.
+- Spara systemöversikten som bild.
+
+7. VIKTIGA FILER
+
+Kupongen:
+src/app/components/match-component/match-component.component.ts
+src/app/components/match-component/match-component.component.html
+src/app/components/match-component/match-component.component.scss
+src/app/components/match-component/match-component.component.spec.ts
+
+Översiktsdialog:
+src/app/components/coupon-overview/
+
+Färgväljare och färgpreferenser:
+src/app/components/player-colors/
+src/app/utils/avatar-color.ts
+src/app/utils/avatar-color.spec.ts
+
+Auth, data och globala stilar:
+src/app/services/auth.service.ts
+src/app/services/live.service.ts
+src/app/services/supabase.client.ts
+src/app/app.ts
+src/styles.scss
+
+Supabase:
+supabase/functions/stryktipset-sync/
+supabase/migrations/202609160001_live_tipping.sql
+supabase/migrations/202609160002_admin_login.sql
+supabase/migrations/202609160003_free_match_choice.sql
+supabase/setup-admin.sql
+supabase/schedule-sync.sql
+
+Instruktioner och UI-kontroll:
+docs/live-tipping.md
+docs/coupon-ui-review.md
+tests/ui/coupon-layout.cjs
+
+Utveckling och produktion använder olika Supabase-projekt, konfigurerade i src/environments/environment.ts respektive environment.prod.ts. Kontrollera alltid rätt miljö innan eventuell driftsättning. Hemligheter ingår inte i denna sammanfattning.
+
+8. VERIFIERING OCH KOMMANDON
+
+Senast vid färgväljarändringen passerade:
+- 57 Angular-tester.
+- TypeScript-kontroll.
+- Produktionsbygge utan varningar.
+- Playwright-kontroll av layout och funktionalitet på 320, 375, 390, 430, 768 och 1440 px.
+
+Webbläsartesterna fångar upp Supabase-anrop och realtime med testdata. De bevisar inte att produktionens backend/cron är korrekt driftsatt.
+
+Kommandon från projektmappen:
+npm start
+npm run build
+npm run typecheck
+npm run test:ui
+npm run test:server
+
+Angular-tester i aktuell Windows-miljö, PowerShell:
+$env:CHROME_BIN='C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe'
+npm test -- --watch=false --browsers=ChromeHeadless
+
+npm run test:ui förutsätter en lokal utvecklingsserver på localhost:4200, om inte COUPON_TEST_URL anger en annan lokal adress. Testet använder Playwright och installerad Edge på Windows. Skärmbilder sparas i tmp/coupon-review/ som ignoreras av Git.
+
+Server-/databastester finns sedan tidigare, men kördes inte på nytt för de senaste rena presentationsändringarna. Gör inte om historiska testresultat till påståenden om aktuell produktionsstatus.

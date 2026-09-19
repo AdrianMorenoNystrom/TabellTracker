@@ -1,0 +1,281 @@
+STRYKTIPSTABELLEN – SAMMANFATTNING AV HELA PROJEKTET
+Sammanställd: 19 september 2026
+
+Den här texten beskriver projektets syfte, funktioner, regler och teknik. Den kan lämnas till ChatGPT som bakgrund för fortsatt diskussion eller utveckling. Beskrivningen bygger på projektets kod och beslut i samtalet. Funktioner som finns i koden är inte automatiskt bekräftade som driftsatta i produktion.
+
+1. VAD ÄR STRYKTIPSTABELLEN?
+
+Stryktipstabellen är en privat webbapp för ett kompisgäng som spelar Stryktipset tillsammans. Den kombinerar en gemensam livekupong med intern tävling, resultat, tabell och statistik över flera säsonger.
+
+De fyra spelarna är Ompen, Sillen, Adrian och Danne. Appen hjälper dem att välja sina matcher, se vad de andra har tippat och följa vem som presterar bäst. Administratören sköter bland annat inbjudningar, hämtning av kuponger och ordningen för vem som har fyra matcher.
+
+Appen är särskilt anpassad för mobil. Själva inlämningen av systemet görs manuellt hos Svenska Spel. Appen har en översikt som underlättar överföringen av tecknen.
+
+2. SPELREGLER OCH MATCHFÖRDELNING
+
+En kupong innehåller 13 matcher. Alla matcher är fria att välja från början. Det finns ingen fast fördelning där vissa matchnummer tillhör en viss person.
+
+- Tre spelare väljer tre matcher var: en spik och två halvor.
+- En spelare väljer fyra matcher: två spikar och två halvor.
+- En spik är ett valt tecken: 1, X eller 2.
+- En halva skapas genom att välja två tecken på samma match.
+- Det finns ingen separat knapp för ”halva”.
+- Tre tecken på samma match tillåts inte.
+
+Vem som har fyra matcher roterar. Admin kan själv bestämma spelarnas ordning. Rotation styr bara antalet matcher, inte vilka matcher spelarna får välja.
+
+När ett tips sparas får matchen en ägare. Om tipset tas bort blir matchen tillgänglig igen. Sparandet kontrollerar bland annat ägarskap, kvoter och spelstopp. Samtidiga ändringar hanteras på serversidan så att två spelare inte kan skriva över varandras val utan kontroll.
+
+3. ETT VANLIGT VECKOFLÖDE
+
+1) En aktuell kupong hämtas från Svenska Spel via Supabase.
+2) Appen använder ligans egna omgångsnummer och rotation för fyramatchsspelaren.
+3) Spelarna öppnar appen och väljer lediga matcher och tecken.
+4) Tips sparas automatiskt och lagets status uppdateras.
+5) En spelare öppnar ”Översikt” och för över systemet till Svenska Spel.
+6) Vid spelstopp låses vanliga ändringar.
+7) Officiella resultat hämtas och används för rättning.
+8) När underlaget är komplett sparas omgångens resultat i historiken.
+9) Tabell och statistik visar utfallet. Resultatbilder kan laddas ner och delas manuellt.
+
+Automatisk hämtning och rättning förutsätter att backendfunktionen och dess schemaläggning är konfigurerade i Supabase.
+
+4. LIVEKUPONGEN
+
+Kupongen är appens startsida. Den visar matcherna med lag, matchnummer, teckenknappar, odds och Svenska folkets procentfördelning.
+
+Viktiga funktioner:
+
+- Direktval av 1, X och 2 med stora tryckytor på mobilen.
+- Automatisk sparning av tips.
+- Uppdateringar via Supabase Realtime, med periodisk hämtning som reserv.
+- Spelstopp och kontroll av om kupongen fortfarande får ändras.
+- Uppdateringsknapp för aktuella uppgifter.
+- Tidpunkt för senast hämtade odds och procent bredvid uppdateringsknappen.
+- Tydliga laddnings-, fel- och sparstatusar.
+- Saknade uppgifter visas som streck. Tidigare giltiga värden kan behållas när en ny hämtning misslyckas.
+- Markeringar för rätt och fel när resultat finns.
+
+Om en spelare redan har fyllt sin spikkvot kan första tecknet i en ny halva ligga som ett lokalt, osparat val tills det andra tecknet väljs. Gränssnittet visar då att valet inte är sparat. Det sparas inte som en otillåten extra spik.
+
+Omgångsväljaren använder ligans egna omgångsnummer. Svenska Spels interna dragningnummer är en separat identifierare. Nästa nya ligaomgång utgår från senast registrerade omgång plus ett.
+
+5. ÄGARSKAP, NAMN OCH FÄRGER
+
+Ovanför kupongen visas lagets spelare och status för deras rader, exempelvis ”Inte lagd”, ”Påbörjad” eller ”Rad klar”. Personen med fyra matcher har en tydlig märkning med ”4 matcher”.
+
+En vald match visar spelarens namn under lagen. Namnet har en svag bakgrundston i spelarens färg. Ett vertikalt streck längst till vänster på matchraden använder samma färg. Det finns även färgmarkeringar vid namnen ovanför kupongen.
+
+Text som ”Tagen av”, ”Ledig” och ”Du” efter det egna namnet har tagits bort från matchraderna. Den tidigare sammanfattningen ”Dina tips” och överflödiga hjälptexter har också tagits bort.
+
+Standardfärger:
+- Ompen: blå.
+- Sillen: orange.
+- Adrian: grön.
+- Danne: rosa.
+
+Knappen ”Färger” öppnar en färgväljare där färgerna kan ändras och återställas. Valen sparas lokalt i webbläsaren och kräver ingen databasändring. De synkroniseras inte mellan spelarnas enheter. Varje person kan alltså ha sin egen färguppsättning. Statistikdiagram kan använda egna diagramfärger.
+
+6. ÖVERSIKT AV HELA SYSTEMET
+
+Knappen ”Översikt” högst upp öppnar en kompakt vy med alla 13 matcher och deras sparade tecken. Den är gjord för att enkelt kunna läsa av hela systemet, framför allt på mobil.
+
+Vyn visar bland annat omgång, spelstopp, matchnummer, lag, valda tecken, spelarlegend och information om eventuella saknade val.
+
+Översikten är en fryst kopia från när den öppnades. Den ändras inte när andra spelare gör nya val i bakgrunden. Det gör avläsningen stabil när systemet förs över till Svenska Spel. För att se senare ändringar behöver översikten öppnas igen.
+
+Översikten kan inte öppnas medan egna val fortfarande är osparade eller håller på att sparas. Den lämnar inte in någon kupong automatiskt och har i nuläget ingen egen export till bild.
+
+7. TABELL OCH OMGÅNGSHISTORIK
+
+Sidan ”Tabell” samlar säsongens ställning och registrerade omgångar.
+
+Tabellen visar bland annat:
+- Placering och förändring i placering.
+- Totalt antal rätt.
+- Träffsäkerhet: rätt i förhållande till antal tippade matcher.
+- Jämförelse med motsvarande läge föregående säsong, när sådana data finns.
+
+Placeringen beräknas i första hand på antal rätt. Vid samma antal rätt får den som tippat färre matcher bättre placering. Samma antal rätt och samma antal tippade matcher ger delad placering. Namn används för stabil visningsordning när spelare ligger lika.
+
+Tabellen visas som tabell på större skärmar och som kort på mindre skärmar. Ett klick på en spelare öppnar spelarens statistik och historik.
+
+Omgångslistan visar omgångsnummer, vecka, lagets totala antal rätt och vinnare eller delad vinst. Listan kan sorteras efter nyast, äldst, högst resultat eller lägst resultat. Det finns ett begränsat senaste-urval och möjlighet att visa alla omgångar.
+
+Detaljvyn för en omgång visar varje spelares resultat och antal valda matcher. Full pott markeras. Omgångsvinnare utses efter högst antal rätt i den omgången; flera personer kan dela vinsten.
+
+Admin kan lägga in historiska omgångar manuellt och ta bort omgångar. Vid tillägg föreslås nästa omgångsnummer och fördelningen mellan tre och fyra matcher utifrån rotationen.
+
+8. SPELARPROFILER OCH PERSONLIG HISTORIK
+
+Spelarens detaljvy innehåller:
+
+- Säsongens antal rätt och antal möjliga rätt.
+- Antal spelade omgångar och snitt per omgång.
+- Träffsäkerhet i procent.
+- Form baserad på de senaste fem omgångarna, eller färre om det saknas fem.
+- Jämförelse med föregående säsong vid motsvarande omgång.
+- Nuvarande, föregående och bästa placering.
+- Antal omgångsvinster, uppdelat på egna och delade vinster.
+- Diagram över resultaten under säsongen.
+- Sammanlagda resultat över flera säsonger.
+- Säsongsvis historik.
+- En lista över aktuella säsongens omgångar med resultat som exempelvis 2/3 eller 4/4.
+
+Träffsäkerheten räknas mot faktiskt antal valda matcher. Skillnaden mellan tre och fyra matcher tas därför med i procentstatistiken.
+
+9. DATASIDAN OCH SÄSONGSJÄMFÖRELSER
+
+Sidan ”Data” ger en bredare analys av laget och spelarna.
+
+Den visar bland annat vem som senast hade fyra matcher, spelarens resultat då, lagets totalresultat och statistik per spelare. Där finns totalsiffror, snitt, senaste form och fullpotter, inklusive skillnaden mellan 3/3 och 4/4.
+
+Jämförelsedelen har tre vyer:
+
+”Totalt per omgång”
+Jämför lagets resultat per omgång mellan aktuell och föregående säsong med diagram och resultatdifferenser.
+
+”Spelare och form”
+Låter användaren välja vilka spelare som ska visas. Jämför träffsäkerhet, antal rätt, antal tippade matcher och form med föregående säsong. Föregående säsong avgränsas till motsvarande läge så att jämförelsen inte blir mot en hel avslutad säsong.
+
+”Placeringar”
+Visar hur spelarnas placeringar utvecklats genom säsongen. Det går att jämföra säsonger och välja spelare. Första plats visas högst upp i diagrammet.
+
+Den huvudsakliga formstatistiken använder fem senaste omgångarna och faktisk matchkvot. Jämförelser mellan träffsäkerheter är skillnader i procentenheter.
+
+10. RESULTATBILDER OCH DELNING
+
+Funktionen ”Omgångsbild” finns redan vid historiska omgångar. Den skapar två bilder lokalt i webbläsaren:
+
+1) ”Omgången”: vinnare, resultat och spelarnas prestationer i vald omgång.
+2) ”Säsongsläget”: tabell, form och utveckling efter den valda omgången.
+
+Båda kan laddas ner som PNG och därefter delas manuellt, till exempel i Snapchat-gruppen. Säsongsbilden utgår från läget efter den valda omgången, inte automatiskt från dagens senaste tabell.
+
+Observera att resultatbildens formmått använder de senaste tre omgångarnas träffsäkerhet jämfört med säsongens träffsäkerhet. Det skiljer sig från femomgångsfönstret i den huvudsakliga spelarstatistiken.
+
+Det finns alltså redan export av historiska resultatbilder. Detta är en annan funktion än livekupongens ”Översikt”, som används före inlämning.
+
+Automatiska meddelanden till Snapchat har inte implementerats. En knapp för att kopiera en färdig resultattext har diskuterats men är inte implementerad. Inga meddelanden har skickats till spelarna av assistenten.
+
+11. ADMINISTRATION OCH INLOGGNING
+
+Admin har en egen permanent inloggning med e-post och lösenord via Supabase Auth. Administratörsbehörigheten kopplas till rätt användare på serversidan.
+
+Övriga spelare kan aktivera sin enhet via personliga inbjudningslänkar. Bakom detta används Supabase Auth och en medlemskoppling. En anonym Supabase-session ger inte i sig åtkomst till ligans skyddade data.
+
+Inbjudningarna är avsedda för engångsaktivering, har begränsad giltighet och kan ersätta tidigare enhetsåtkomst. Det har funnits ett fel där en utloggad besökare tappade inbjudningstoken vid navigering; detta är rättat i koden och har regressionstest.
+
+Admin kan bland annat:
+- Hämta kupong och resultat.
+- Skapa personliga inbjudningslänkar.
+- Ändra rotationsordningen med upp- och nedknappar.
+- Spara eller återställa rotationsordningen.
+- Lägga tips för en vald spelare i adminläge.
+- Göra kontrollerade korrigeringar av låsta tips och resultat med motivering.
+- Lägga till eller ta bort historiska omgångar.
+
+En ändrad rotation används för kommande kuponger och fortsätter med hänsyn till vem som senast hade fyra matcher.
+
+12. HÄMTNING FRÅN SVENSKA SPEL OCH AUTOMATISK RÄTTNING
+
+Integrationen körs som Supabase Edge Function med namnet ”stryktipset-sync”. En separat egen API-server behövs därför inte för den här integrationen.
+
+Backend hämtar och kontrollerar kupong, matcher, spelstopp, odds, Svenska folkets fördelning och officiella resultat. Den hanterar felaktiga eller ofullständiga svar, omförsök och begränsning av hur ofta hämtningar görs.
+
+När samtliga 13 officiella utfall och kompletta spelarrader finns kan kupongen rättas och föras över till historiken. En rätt tippad match ger en poäng för spelaren, oavsett om tipset var en spik eller halva.
+
+Samma kupong ska inte skapa dubbla historiska omgångar när synkroniseringen körs igen. Senare korrigeringar kan uppdatera ett redan registrerat resultat.
+
+Schemalagd synkronisering använder Supabase/Postgres-funktioner för cron och HTTP-anrop. Hemligheter och projektadress behöver vara korrekt konfigurerade. Att frontend är publicerad räcker inte för att automatisk rättning ska köras.
+
+13. SÄKERHET OCH DATA
+
+Supabase/Postgres lagrar både historiska resultat och data för livekupongen.
+
+Historiska data omfattar bland annat spelare, säsonger, omgångar och spelarnas resultat per omgång. Livefunktionen har separata delar för medlemskap, inbjudningar, rotation, kuponger, matcher, tips och synkronisering.
+
+Viktiga kontroller ligger i backend och databasen:
+- Behörighet och aktivt medlemskap.
+- Adminrättigheter.
+- Matchägarskap och kvoter.
+- Spelstopp.
+- Versionskontroll vid samtidiga ändringar.
+- Loggning av administrativa korrigeringar.
+
+Databasmigreringarna innehåller RLS-regler, alltså regler för vilka rader en användare får läsa och ändra. Skyddet ska fungera även om någon försöker anropa databasen utan appens gränssnitt. Privilegierade nycklar hör hemma på serversidan.
+
+Denna sammanfattning verifierar inte vilka migreringar och behörigheter som faktiskt är aktiva i produktionsdatabasen.
+
+14. TEKNIK OCH PROJEKTSTRUKTUR
+
+Frontend:
+- Angular 20 med fristående komponenter.
+- TypeScript, HTML och SCSS.
+- Angular Material för bland annat dialoger och formulär.
+- RxJS för asynkrona flöden.
+- Chart.js via ng2-charts för statistikdiagram.
+
+Backend och drift:
+- Supabase Postgres för datalagring.
+- Supabase Auth för inloggning och enhetsaktivering.
+- Supabase Realtime för uppdateringar mellan spelare.
+- Supabase Edge Functions för Svenska Spel-integrationen.
+- Vercel-konfiguration för frontend och klientbaserad navigering.
+
+Viktiga delar av kodbasen:
+- src/app/components/ – kupong, tabell, statistik, admin och dialoger.
+- src/app/guards/ – skydd av inloggade vyer och adminvyer.
+- src/app/utils/ – bland annat tabellberäkningar, prestationsmått och spelarfärger.
+- src/environments/ – miljöinställningar för utveckling och produktion.
+- supabase/functions/ – Edge Function och gemensam integrationskod.
+- supabase/migrations/ – versionshanterade databasändringar.
+- tests/ – backend- och gränssnittstester.
+- docs/live-tipping.md – installations- och driftinstruktioner.
+
+Huvudadresser:
+- / eller /matches: livekupong.
+- /tabell: tabell och omgångar.
+- /data: statistik och jämförelser.
+- /admin: administration.
+- /admin/login: administratörsinloggning.
+- /join/:token: aktivering via inbjudan.
+- /kronikor/:id: detaljsida för en krönika.
+
+15. KRÖNIKOR OCH ÄLDRE FUNKTIONER
+
+Kod och datastöd finns för krönikor/artiklar med lista, detaljsida samt skapande och borttagning. Detaljsidan har en aktiv route, men artikellistan är inte inkopplad i den nuvarande huvudvyn eller huvudnavigationen.
+
+Det finns även äldre komponenter i projektet. Att en komponent finns i koden betyder därför inte alltid att den går att nå från dagens gränssnitt.
+
+16. UTVECKLING OCH KONTROLLER
+
+Projektmapp: C:\tabelltracker\TabellTracker
+
+Vanliga kommandon:
+- npm start – startar lokal utveckling, normalt på http://localhost:4200/.
+- npm run typecheck – kontrollerar TypeScript.
+- npm run build – bygger frontend.
+- npm test – kör Angular-tester.
+- npm run test:server – kör backendtester.
+- npm run test:ui – kör tester av gränssnittet med Playwright.
+
+Lokal frontend använder den Supabase-miljö som utvecklingsinställningarna pekar på. Lokal adress betyder alltså inte automatiskt lokal eller isolerad databas.
+
+Testerna täcker bland annat regler och sparande, inbjudningar, datatolkning, rättning och mobilgränssnitt. Gränssnittstesterna använder simulerade Supabase-svar och realtimehändelser. Projektet har kontrollerats i flera mobil- och desktopbredder, inklusive 320 pixlar.
+
+Inga nya kodtester har körts enbart för att skapa denna textfil. Sammanfattningen är inte ett intyg om aktuell produktionsdrift.
+
+17. VIKTIGA PRINCIPER FÖR FORTSATT ARBETE
+
+- Behåll fria matchval. Inför inte fasta matchplatser per spelare.
+- Behåll kvoterna: tre matcher = en spik och två halvor; fyra matcher = två spikar och två halvor.
+- Halvor väljs genom två tecken på matchen.
+- Skilj på ligans omgångsnummer och Svenska Spels interna identifierare.
+- Prioritera mobil användning, tydliga namn och få onödiga hjälptexter.
+- Behåll korrekt sparande, behörighet, realtime och backendkontroller vid visuella ändringar.
+- Skilj på livekupongens frysta översikt och historiska resultatbilder.
+- Beskriv lokala färgval som lokala, inte gemensamt synkroniserade.
+- Skilj på implementerade funktioner, driftsatta funktioner och framtida förslag.
+
+Den senaste diskussionen gäller hur spelarna kan meddelas när nya resultat finns, med Snapchat som önskad kanal. Befintliga resultatbilder kan redan användas för manuell delning. Automatisk notifiering återstår att utreda och bygga om användaren vill gå vidare med det.

@@ -76,12 +76,13 @@ before(async () => {
   await asUser(1,()=>rpc('live_configure_allocation',[1,[1,1,1,1,2,2,2,3,3,3,4,4,4]]));
   await asUser(2,()=>rpc('live_save_pick',[4971,5,'1X','104',0]));
   await db.exec(await readFile(new URL('../supabase/migrations/202609160003_free_match_choice.sql',import.meta.url),'utf8'));
+  await db.exec(await readFile(new URL('../supabase/migrations/202609190001_round_recap.sql',import.meta.url),'utf8'));
 });
 after(async () => { await db?.close(); });
 
 test('migration preserves history and closes old RPCs/views to outsiders', async () => {
   assert.equal(await scalar('select sum(score) from round_players'),8);
-  assert.equal(await scalar("select count(*) from pg_policies where schemaname='public' and policyname not in ('league_read','league_admin')"),0);
+  assert.equal(await scalar("select count(*) from pg_policies where schemaname='public' and policyname not in ('league_read','league_admin','recap_own_read')"),0);
   await assert.rejects(rpc('live_bootstrap_admin',[2]),/En admin finns redan/);
   await asUser(5, async () => {
     for(const table of ['players','rounds','round_players','player_stats','player_stats_by_season','live_members'])
@@ -279,4 +280,100 @@ test('permanent admin login survives player-device replacement and cannot be sel
     const invitation=await rpc('live_create_invite',[4]);
     await assert.rejects(rpc('live_redeem_invite',[invitation]),/annan spelare/);
   });
+});
+
+const addRecapRound = async (number, season=2, scores=[4,2,2,1]) => {
+  const id=await scalar('insert into rounds(roundnumber,week,season_id) values($1,27,$2) returning id',[number,season]);
+  for(let i=1;i<=4;i++) await query('insert into round_players(round_id,player_id,score,matches_picked) values($1,$2,$3,$4)',[id,i,scores[i-1],i===1?4:3]);
+  return id;
+};
+
+test('recap: no complete historical results means no recap; unsettled linked draws are excluded', async () => {
+  await db.exec('begin');
+  try {
+    await db.exec('delete from round_players');
+    assert.equal(await asUser(3,()=>rpc('round_recap_pending',[])),null);
+  } finally { await db.exec('rollback'); }
+  await db.exec('begin');
+  try {
+    await db.exec("update live_draws set status='locked'");
+    const payload=await asUser(3,()=>rpc('round_recap_pending',[]));
+    assert.equal(payload.round_id,1); // only the old, manually registered season
+    await db.exec("update live_draws set status='settled'");
+    assert.notEqual((await asUser(3,()=>rpc('round_recap_pending',[]))).round_id,1);
+  } finally { await db.exec('rollback'); }
+});
+
+test('recap: latest only, consistent bounded history, opening is not seen, incomplete manual round excluded', async () => {
+  const r27=await addRecapRound(27);
+  await query('insert into rounds(roundnumber,week,season_id) values(28,28,2)');
+  const payload=await asUser(3,()=>rpc('round_recap_pending',[]));
+  assert.equal(payload.round_id,r27);
+  assert.ok(payload.rounds.every(r=>r.seasonId===2 && r.roundNumber<=27));
+  assert.equal(payload.rounds.at(-1).totalScore,9);
+  assert.equal(payload.rounds.at(-1).players.length,4);
+  assert.equal(await scalar('select count(*) from round_recap_views'),0);
+  assert.deepEqual(await asUser(3,()=>rpc('round_recap_pending',[])),payload);
+  await query('delete from rounds where season_id=2 and roundnumber=28');
+});
+
+test('recap: acknowledgement is idempotent, passes older rounds and does not consume a newer result', async () => {
+  const r27=await scalar('select id from rounds where season_id=2 and roundnumber=27');
+  const r28=await addRecapRound(28,2,[0,3,3,3]);
+  await asUser(3,async()=>{
+    await rpc('round_recap_acknowledge',[r27]);
+    const seen=await query('select * from round_recap_views order by round_id');
+    assert.equal(seen.length,3); // previous season, current round 1 and round 27
+    await rpc('round_recap_acknowledge',[r27]);
+    assert.deepEqual(await query('select * from round_recap_views order by round_id'),seen);
+    assert.equal((await rpc('round_recap_pending',[])).round_id,r28);
+    await rpc('round_recap_acknowledge',[r28]);
+    assert.equal(await rpc('round_recap_pending',[]),null);
+  });
+  await addRecapRound(26); // late backfill must not resurrect an old recap
+  assert.equal(await asUser(3,()=>rpc('round_recap_pending',[])),null);
+  assert.equal((await asUser(4,()=>rpc('round_recap_pending',[]))).round_id,r28);
+});
+
+test('recap: RLS isolates receipts; outsiders and forged writes cannot acknowledge another member', async () => {
+  const r28=await scalar('select id from rounds where season_id=2 and roundnumber=28');
+  await asUser(4,async()=>{
+    assert.equal((await query('select * from round_recap_views')).length,0);
+    await assert.rejects(query('insert into round_recap_views(round_id,member_id) values($1,3)',[r28]),/permission denied/);
+    await assert.rejects(query('update round_recap_views set seen_at=now()'),/permission denied/);
+    await assert.rejects(query('delete from round_recap_views'),/permission denied/);
+    assert.equal((await query('update rounds set totalscore=13 returning id')).length,0);
+    await assert.rejects(rpc('round_recap_acknowledge',[999999]),/inte färdigregistrerad/);
+  });
+  await asUser(2,async()=>{ // revoked device, now owned by user 5
+    assert.equal(await rpc('round_recap_pending',[]),null);
+    assert.equal((await query('select * from round_recap_views')).length,0);
+    await assert.rejects(rpc('round_recap_acknowledge',[r28]),/Aktivt medlemskap/);
+  });
+  await db.exec('set role anon');
+  try { await assert.rejects(rpc('round_recap_pending',[]),/permission denied/); }
+  finally { await db.exec('reset role'); }
+});
+
+test('recap: seen follows stable membership across device replacement and permanent admin login', async () => {
+  const r28=await scalar('select id from rounds where season_id=2 and roundnumber=28');
+  await asUser(5,()=>rpc('round_recap_acknowledge',[r28]));
+  const token=await asUser(7,()=>rpc('live_create_invite',[2]));
+  await asUser(8,async()=>{
+    await rpc('live_redeem_invite',[token]);
+    assert.equal(await rpc('round_recap_pending',[]),null);
+  });
+  await asUser(6,()=>rpc('round_recap_acknowledge',[r28])); // admin's player device
+  assert.equal(await asUser(7,()=>rpc('round_recap_pending',[])),null); // same membership
+});
+
+test('recap: season rollover uses season chronology rather than reset round numbers', async () => {
+  await query("insert into seasons(id,name,start_year,end_year,is_current) values(30,'2027/28',2027,2028,false)");
+  const id=await addRecapRound(1,30);
+  const payload=await asUser(3,()=>rpc('round_recap_pending',[]));
+  assert.equal(payload.round_id,id);
+  assert.equal(payload.rounds.length,1);
+  assert.equal(payload.rounds[0].seasonId,30);
+  await asUser(3,()=>rpc('round_recap_acknowledge',[id]));
+  assert.equal(await asUser(3,()=>rpc('round_recap_pending',[])),null);
 });

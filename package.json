@@ -9,6 +9,7 @@
     "test": "ng test",
     "test:server": "node --test tests/*.test.mjs",
     "test:ui": "node tests/ui/coupon-layout.cjs",
+    "test:recap-ui": "node tests/ui/round-recap.cjs",
     "typecheck": "tsc --noEmit -p tsconfig.app.json"
   },
   "prettier": {

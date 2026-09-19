@@ -17,8 +17,9 @@ Produktion pekar på ett annat projekt. Inställningarna finns i `src/environmen
 1. [202609160001_live_tipping.sql](../supabase/migrations/202609160001_live_tipping.sql)
 2. [202609160002_admin_login.sql](../supabase/migrations/202609160002_admin_login.sql)
 3. [202609160003_free_match_choice.sql](../supabase/migrations/202609160003_free_match_choice.sql)
+4. [202609190001_round_recap.sql](../supabase/migrations/202609190001_round_recap.sql)
 
-**Kör bara de filer som du inte redan kört, i nummerordning.** Har du kört 001 och 002 behöver du bara köra 003. Den öppnar för fria matchval och behåller sparade tips.
+**Kör bara de filer som du inte redan kört, i nummerordning.** Har du redan installerat de tre live-migreringarna behöver du bara köra `202609190001_round_recap.sql`. Den lagrar vilka omgångsrecaps varje spelare har sett. Se [omgångsrecap](round-recap.md) för funktion och teststeg.
 
 Filerna förutsätter att projektets befintliga tabeller, säsonger och fyra spelare finns. De raderar ingen historik. Ett helt tomt Supabase-projekt behöver först få appens befintliga databasstruktur; dessa filer är uppgraderingar.
 

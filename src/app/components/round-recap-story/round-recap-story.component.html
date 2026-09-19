@@ -1,0 +1,80 @@
+<dialog #dialog tabindex="-1" aria-labelledby="recap-title" aria-modal="true" [attr.aria-busy]="saving" (cancel)="cancel($event)" (keydown)="key($event)">
+  <div class="story">
+    <header>
+      <div><span class="brand">STRYKTIPSTABELLEN</span><strong>Omgång {{ recap.round.roundNumber }}</strong></div>
+      <span class="counter" aria-live="polite" aria-atomic="true">{{ slide + 1 }}/{{ slides.length }}<span class="sr-only"> · {{ slides[slide] }}</span></span>
+      <button class="close" type="button" aria-label="Stäng recap" [disabled]="saving" (click)="close()">×</button>
+    </header>
+    <main #content (touchstart)="touchStart($event)" (touchend)="touchEnd($event)" (touchcancel)="touchCancel()">
+      @switch (slide) {
+        @case (0) {
+          <section class="slide result">
+            <p class="eyebrow">Omgången</p>
+            <h1 id="recap-title">Omgång {{ recap.round.roundNumber }} är avgjord</h1>
+            <div class="hero"><strong>{{ recap.round.totalScore }}</strong><span>/ 13 rätt</span></div>
+            <div class="winner">
+              <p>{{ recap.winners.length > 1 ? 'Delad omgångsvinst' : 'Omgångsvinnare' }}</p>
+              <h2>{{ recap.winners.join(' & ') }}</h2>
+            </div>
+            <ul class="results">
+              @for (player of recap.players; track player.id) {
+                <li [style.--player-color]="color(player.name)">
+                  <span class="name">{{ player.name }}</span>
+                  @if (player.score === player.matchesPicked) { <span class="full">Full pott</span> }
+                  <strong>{{ player.score }}/{{ player.matchesPicked }}</strong>
+                </li>
+              }
+            </ul>
+            @if (recap.highlight) { <p class="highlight">{{ recap.highlight }}</p> }
+          </section>
+        }
+        @case (1) {
+          <section class="slide table-slide">
+            <p class="eyebrow">Tabellförändringen</p>
+            <h1 id="recap-title">{{ recap.tableHeadline }}</h1>
+            <p class="subtitle">Tabellen efter omgång {{ recap.round.roundNumber }}</p>
+            <table>
+              <thead><tr><th scope="col">Plats</th><th scope="col">Spelare</th><th scope="col">Rätt</th><th scope="col"><span class="sr-only">Förändring</span></th></tr></thead>
+              <tbody>
+                @for (player of recap.standings; track player.name) {
+                  <tr [style.--player-color]="color(player.name)">
+                    <td class="place">{{ player.placement }}</td>
+                    <th scope="row">{{ player.name }}</th>
+                    <td class="score">{{ player.score }}</td>
+                    <td class="movement" [class.up]="player.change !== null && player.change > 0" [attr.aria-label]="movementLabel(player.change)">{{ movement(player.change) }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </section>
+        }
+        @case (2) {
+          <section class="slide season">
+            <p class="eyebrow">Säsongen i siffror</p>
+            <h1 id="recap-title">{{ recap.count }} {{ recap.count === 1 ? 'omgång spelad' : 'omgångar spelade' }}</h1>
+            <p class="subtitle">{{ recap.round.seasonName }} · efter omgång {{ recap.round.roundNumber }}</p>
+            <div class="metrics">
+              <article class="average">
+                <h2>Lagets snitt</h2><strong>{{ number(recap.average) }} <small>/ 13</small></strong>
+                @if (recap.averageChange !== null) {
+                  <p>{{ recap.averageChange > 0.049 ? '↑' : recap.averageChange < -0.049 ? '↓' : '—' }} {{ number(recap.averageChange < 0 ? -recap.averageChange : recap.averageChange) }} sedan förra omgången</p>
+                }
+              </article>
+              <article><h2>Bäst träffsäkerhet</h2><strong>{{ number(recap.accuracy.value) }} <small>%</small></strong><p>{{ recap.accuracy.names.join(' & ') }}</p></article>
+              <article><h2>Flest omgångsvinster</h2><strong>{{ recap.wins.value }}</strong><p>{{ recap.wins.names.join(' & ') }}</p></article>
+              <article><h2>Bäst form</h2><strong>{{ number(recap.form.value) }} <small>%</small></strong><p>{{ recap.form.names.join(' & ') }}</p><span class="caption">{{ recap.count === 1 ? 'Senaste omgången' : 'Senaste ' + (recap.count < 5 ? recap.count : 5) + ' omgångarna' }}</span></article>
+            </div>
+          </section>
+        }
+      }
+    </main>
+    <footer>
+      @if (error) { <p class="error" role="alert">{{ error }}</p> }
+      <div class="progress" aria-hidden="true">@for (label of slides; track label; let i = $index) { <span [class.current]="i === slide"></span> }</div>
+      <nav aria-label="Recapnavigation">
+        <button type="button" class="previous" [disabled]="slide === 0 || saving" (click)="previous()">← Föregående</button>
+        <button type="button" class="primary" [disabled]="saving" (click)="slide < slides.length - 1 ? next() : close()">{{ saving ? 'Sparar…' : slide < slides.length - 1 ? 'Nästa →' : 'Stäng' }}</button>
+      </nav>
+    </footer>
+  </div>
+</dialog>

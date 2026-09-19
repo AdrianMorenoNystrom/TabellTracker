@@ -9,6 +9,8 @@ import { MatIcon } from '@angular/material/icon';
 
 
 import { AuthService } from './services/auth.service';
+import { RoundRecapService } from './services/round-recap.service';
+import { RoundRecapStoryComponent } from './components/round-recap-story/round-recap-story.component';
 import { avatarLetter } from './utils/avatar';
 
 import { combineLatest, Observable } from 'rxjs';
@@ -26,12 +28,14 @@ import {MatMenuModule} from '@angular/material/menu';
     MatIcon,
     RouterLink,
     RouterLinkActive,
-    MatMenuModule
+    MatMenuModule,
+    RoundRecapStoryComponent
   ],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
 export class App implements OnInit {
+  readonly recap = inject(RoundRecapService);
   private destroy = inject(DestroyRef);
   private router = inject(Router);
   protected readonly title = signal('tabelltracker');
@@ -41,6 +45,7 @@ export class App implements OnInit {
   constructor(public auth: AuthService) {}
 
   ngOnInit() {
+    this.recap.start();
     this.isLoggedIn$ = this.auth.isLoggedIn$();
     combineLatest([
       this.auth.isReady$(), this.isLoggedIn$,
