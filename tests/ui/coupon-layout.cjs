@@ -46,6 +46,7 @@ const path = require('node:path');
     const endpoint = url.pathname.split('/').pop();
     let body;
     if (endpoint === 'live_identity') body = {player_id:3,name:'Adrian',is_admin:isAdmin};
+    else if (endpoint === 'round_recap_pending') body = null;
     else if (endpoint === 'live_draws') {
       if (releaseLoading) await releaseLoading;
       body = [draw];
