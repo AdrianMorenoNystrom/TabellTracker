@@ -63,7 +63,26 @@ Exakt tre sidor, manuellt tempo, sidräknare och progressprickar. Knappar, horis
 
 Resultatsidan har högst en objektiv highlight: första fullpotten av aktuell typ, 3/3 eller 4/4, för en spelare under säsongen. Tabellen hanterar nya och delade ledningar utan att utropa en ensam ledare när flera delar. Sista sidan visar fyra kompakta mått: lagets snitt, bäst träffsäkerhet, flest omgångsvinster och bäst form.
 
-Inga nya export-, bild- eller delningsfunktioner ingår. Den tidigare resultatbildsfunktionen är kvar. Bonus-slide och manuell återöppning är inte aktiverade; den fristående beräkningsfunktionen och presentationskomponenten kan återanvändas för återöppning senare.
+Inga nya export-, bild- eller delningsfunktioner ingår. Den tidigare resultatbildsfunktionen är kvar. Bonus-slide är inte aktiverad.
+
+På en rättad kupong visas ett vänteläge med ”Väntar på nya rader” och en nedtonad men läsbar matchlista. ”Visa recap” öppnar den valda omgången även om den redan har kvitterats. Återöppning läser omgångens säsong från historiken och använder samma avgränsade beräkning som automatisk recap; senare omgångar påverkar inte statistiken. Ingen ytterligare migrering krävs. Vid stängning används den befintliga idempotenta kvitteringen.
+
+När nästa spelbara kupong har hämtats växlar den vanliga kupongvyn automatiskt från den rättade omgången. Växlingen sker via realtime eller nästa reservhämtning (var 15:e sekund), utan knapptryck. Sparande, osparade val och pågående administrativa korrigeringar avslutas först. En historisk omgång som användaren uttryckligen valt i omgångsväljaren ligger kvar; en nyöppnad kupongvy följer åter senaste omgången. Nedtoningen tas bort i adminläge för att korrigeringsverktygen ska vara tydliga. En kupong som bara nått spelstopp behåller meddelandet om att rättning inväntas.
+
+## Testa vänteläget på dev-servern
+
+Starta med `npm start` och öppna **http://localhost:4200/dev/kupong**. Sidan finns bara i utvecklingsbygget och kräver ingen inloggning eller SQL-ändring.
+
+- Startsidan visar en färdigrättad testkupong med 9/13 rätt och vänteläget.
+- **Visa recap** öppnar testomgångens recap. Stängning skriver ingen kvittens till databasen.
+- **Simulera nästa kupong** skickar en lokal uppdatering och kupongen växlar automatiskt till nästa öppna omgång.
+- **Visa rättad kupong** återställer förhandsvisningen. Omladdning återställer också all testdata.
+
+Tips som klickas i nästa testkupong sparas bara i sidans minne. Förhandsvisningen använder samma kupongkomponent och växlingslogik som appen. Dev-routen ingår inte i produktionsappens routning.
+
+För mobil på samma Wi-Fi: starta `npm start -- --host 0.0.0.0 --ssl` och öppna `https://DATORNS-IP:4200/dev/kupong`. Webbläsaren kan behöva godkänna det lokala utvecklingscertifikatet.
+
+Browsertestet körs med `npm run test:preview-ui` mot en igångvarande dev-server. Det verifierar vänteläge, recap, automatisk övergång, återställning och att förhandsvisningen inte anropar Supabase.
 
 ## Filer och tester
 

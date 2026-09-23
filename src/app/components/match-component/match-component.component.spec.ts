@@ -4,6 +4,7 @@ import { BehaviorSubject } from 'rxjs';
 import { MatchComponentComponent } from './match-component.component';
 import { AuthService } from '../../services/auth.service';
 import { LiveService } from '../../services/live.service';
+import { RoundRecapService } from '../../services/round-recap.service';
 import { LiveEvent, LivePick } from '../../interfaces/live';
 import { testAuth } from '../../../testing/test-providers';
 import { MatDialog } from '@angular/material/dialog';
@@ -32,12 +33,34 @@ describe('Live coupon', () => {
     service.subscribe.and.callFake((change,status) => { changed = change; status('SUBSCRIBED'); return () => {}; });
     service.save.and.callFake(async (_draw,e,pick,revision,player) => ({event_number:e.event_number,match_id:e.match_id,pick,revision:revision+1,player_id:pick ? player! : null}));
     await TestBed.configureTestingModule({ imports:[MatchComponentComponent],providers:[provideRouter([]),provideNoopAnimations(),
+      { provide: RoundRecapService, useValue: { reopen: jasmine.createSpy().and.resolveTo() } },
       { provide: LiveService,useValue:service },{provide:AuthService,useValue:{...testAuth,isLoggedIn$:()=>member.asObservable()}}] }).compileComponents();
     fixture=TestBed.createComponent(MatchComponentComponent); component=fixture.componentInstance;
     spyOn(TestBed.inject(Router),'navigateByUrl').and.resolveTo(true);
     fixture.detectChanges(); await flush();
   });
   afterEach(()=>fixture.destroy());
+  it('shows a muted completed coupon with a replay button, but keeps locked coupons unchanged', async () => {
+    component.draw!.status = 'locked'; fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.settled-panel')).toBeNull();
+    component.draw!.status = 'settled'; component.draw!.round_id = 27; fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.settled-panel').textContent).toContain('Väntar på nya rader');
+    expect(fixture.nativeElement.querySelector('.matches.finished')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('.fetch-status')).toBeNull();
+    await component.openRecap();
+    expect(TestBed.inject(RoundRecapService).reopen).toHaveBeenCalledWith(27);
+    component.adminMode = true; fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.matches.finished')).toBeNull();
+  });
+  it('automatically opens the next playable coupon and clears old tips', async () => {
+    const old = {...component.draw!,status:'settled' as const,reg_close_time:new Date(Date.now()-86400000).toISOString()};
+    const next = {...old,draw_number:4972,round_number:2,status:'open' as const,reg_close_time:new Date(Date.now()+86400000).toISOString()};
+    component.picks.set(1,{event_number:1,match_id:'101',pick:'1',revision:99,player_id:1});
+    service.draws.and.resolveTo([next,old]); await component.reload(); fixture.detectChanges();
+    expect(component.draw!.draw_number).toBe(next.draw_number);
+    expect(component.picks.size).toBe(0);
+    expect(fixture.nativeElement.querySelector('.settled-panel')).toBeNull();
+  });
   it('opens a frozen overview of all saved signs and owners, ignoring replaced matches', async () => {
     const event = component.events[0];
     component.picks.set(1,{event_number:1,match_id:event.match_id,pick:'1X',revision:1,player_id:2});
@@ -58,6 +81,23 @@ describe('Live coupon', () => {
     expect(document.querySelector('app-coupon-overview .incomplete')?.textContent).toContain('12 matcher saknar tips');
     member.next(false); await flush();
     expect(TestBed.inject(MatDialog).openDialogs.length).toBe(0);
+  });
+  it('waits for the next coupon to open and preserves explicitly selected history', async () => {
+    const old={...component.draw!,status:'settled' as const};
+    const next={...old,draw_number:4972,round_number:2,status:'draft' as const,reg_close_time:new Date(Date.now()+2*86400000).toISOString()};
+    service.draws.and.resolveTo([next,old]); await component.reload();
+    expect(component.draw!.draw_number).toBe(old.draw_number);
+    await component.selectDraw(); // user explicitly chose the old coupon
+    service.draws.and.resolveTo([{...next,status:'open'},old]); await component.reload();
+    expect(component.draw!.draw_number).toBe(old.draw_number);
+  });
+  it('defers switching while an admin correction is being edited', async () => {
+    const old={...component.draw!,status:'settled' as const};
+    const next={...old,draw_number:4972,status:'open' as const,reg_close_time:new Date(Date.now()+2*86400000).toISOString()};
+    component.correctingResult=1;service.draws.and.resolveTo([next,old]);await component.reload();
+    expect(component.draw!.draw_number).toBe(old.draw_number);
+    component.correctingResult=null;await component.reload();
+    expect(component.draw!.draw_number).toBe(next.draw_number);
   });
   it('does not open an overview with unsaved or pending selections', () => {
     component.drafts.set(1,{pick:'1',player:1,match:component.events[0].match_id,revision:0});

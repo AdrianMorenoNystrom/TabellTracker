@@ -5,21 +5,25 @@ import { Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AuthService } from '../../services/auth.service';
 import { LiveService } from '../../services/live.service';
+import { RoundRecapService } from '../../services/round-recap.service';
 import { LiveDraw, LiveEvent, LivePick, LivePlayer, LiveResult } from '../../interfaces/live';
 import { avatarColor } from '../../utils/avatar-color';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { CouponOverviewComponent, CouponOverviewData } from '../coupon-overview/coupon-overview.component';
 import { PlayerColorsComponent } from '../player-colors/player-colors.component';
+import { CouponSettledComponent } from '../coupon-settled/coupon-settled.component';
 
 @Component({
   standalone: true, selector: 'app-match-component',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CouponSettledComponent],
   templateUrl: './match-component.component.html',
   styleUrl: './match-component.component.scss',
 })
 export class MatchComponentComponent implements OnInit {
   readonly auth = inject(AuthService);
   private service = inject(LiveService);
+  private recap = inject(RoundRecapService);
+  recapLoading = false;
   private destroy = inject(DestroyRef);
   private router = inject(Router);
   private dialog = inject(MatDialog);
@@ -56,6 +60,7 @@ export class MatchComponentComponent implements OnInit {
   private saveEpoch = 0;
   private loadGeneration = 0;
   private disposed = false;
+  private followLatest = true;
   private reloadTimer?: ReturnType<typeof setTimeout>;
 
   ngOnInit() {
@@ -108,6 +113,13 @@ export class MatchComponentComponent implements OnInit {
         this.selected = (future.find(d => d.status === 'open') ?? future[0] ?? draws[0])?.draw_number ?? null;
       }
       this.draw = draws.find(d => d.draw_number === this.selected) ?? null;
+      const next = this.nextDraw;
+      if (this.followLatest && next?.status === 'open' && Date.parse(next.reg_close_time) > Date.now()
+        && !this.saving && !this.drafts.size && this.correctingPlayer === null && this.correctingResult === null) {
+        this.clearSelection();
+        this.selected = next.draw_number; this.draw = next;
+        this.notice = `Omgång ${next.round_number} är öppen`;
+      }
       if (!this.draw) { this.events = []; return; }
       const data = await this.service.load(this.draw.draw_number);
       if (this.disposed || generation !== this.loadGeneration || !this.auth.isLoggedInSnapshot()) return;
@@ -130,11 +142,31 @@ export class MatchComponentComponent implements OnInit {
     finally { if (generation === this.loadGeneration) this.loading = false; }
   }
   async selectDraw() {
-    this.picks.clear(); this.optimistic.clear(); this.optimisticPlayers.clear(); this.drafts.clear(); this.results.clear(); this.events = [];
-    this.correctingPlayer = null; this.correctingResult = null; this.error = '';
+    // Explicit historical selection should remain inspectable while the live view advances.
+    this.followLatest = false;
+    this.clearSelection();
     await this.reload();
   }
+  private clearSelection() {
+    this.picks.clear(); this.optimistic.clear(); this.optimisticPlayers.clear(); this.drafts.clear(); this.results.clear(); this.events = [];
+    this.correctingPlayer = null; this.correctingResult = null; this.error = '';
+  }
   get locked() { return !!this.draw && (this.now >= Date.parse(this.draw.reg_close_time) || ['locked','settled'].includes(this.draw.status)); }
+  get settled() { return this.draw?.status === 'settled'; }
+  get nextDraw() {
+    if (!this.draw || !this.settled) return null;
+    const newer = this.draws.filter(d => Date.parse(d.reg_close_time) > Date.parse(this.draw!.reg_close_time));
+    return newer.filter(d => d.status === 'open' && Date.parse(d.reg_close_time) > this.now)
+      .sort((a,b) => Date.parse(a.reg_close_time) - Date.parse(b.reg_close_time))[0]
+      ?? newer.sort((a,b) => Date.parse(b.reg_close_time) - Date.parse(a.reg_close_time))[0] ?? null;
+  }
+  async openRecap() {
+    if (!this.draw?.round_id || !this.settled || this.recapLoading) return;
+    this.recapLoading = true; this.error = '';
+    try { await this.recap.reopen(this.draw.round_id); }
+    catch { if (!this.disposed) this.error = 'Kunde inte hämta omgångens recap. Försök igen.'; }
+    finally { this.recapLoading = false; }
+  }
   get saving() { return this.pending.size > 0; }
   get stale() { return !!this.draw && (!!this.draw.last_error || (!this.locked && this.now > Date.parse(this.draw.next_fetch_at) + 300000)); }
   savedSelection(event: LiveEvent) { return this.optimistic.get(event.event_number) ?? (this.picks.get(event.event_number)?.match_id === event.match_id ? this.picks.get(event.event_number)?.pick : '') ?? ''; }

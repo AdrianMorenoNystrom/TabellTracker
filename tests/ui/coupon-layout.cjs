@@ -27,7 +27,7 @@ const path = require('node:path');
     return {event_number:n,match_id:events[n-1].match_id,pick,revision:1,owner:{player_id:p}};
   });
   const players = [{id:1,name:'Ompen'},{id:2,name:'Sillen'},{id:3,name:'Adrian'},{id:4,name:'Danne'}];
-  let results = [], isAdmin = false, syncFails = false;
+  let results = [], isAdmin = false, syncFails = false, nextDraw = null;
   let releaseLoading = null;
   let wsChannel = null, wsTopic = null;
   const token = [ {alg:'HS256',typ:'JWT'}, {sub:'visual-test',exp:Math.floor(Date.now()/1000)+864000} ]
@@ -47,9 +47,14 @@ const path = require('node:path');
     let body;
     if (endpoint === 'live_identity') body = {player_id:3,name:'Adrian',is_admin:isAdmin};
     else if (endpoint === 'round_recap_pending') body = null;
+    else if (endpoint === 'round_recap_acknowledge') body = null;
+    else if (endpoint === 'rounds') body = url.searchParams.get('select') === 'season_id' ? {season_id:1} : [{
+      id:28,roundnumber:28,week:28,totalscore:9,season_id:1,season:{id:1,name:'2026/27',is_current:true},
+      round_players:players.map((player,i)=>({player,score:i===2?4:i===3?1:2,matches_picked:i===2?4:3})),
+    }];
     else if (endpoint === 'live_draws') {
       if (releaseLoading) await releaseLoading;
-      body = [draw];
+      body = nextDraw ? [nextDraw,draw] : [draw];
     }
     else if (endpoint === 'live_events') body = events;
     else if (endpoint === 'live_picks') body = picks;
@@ -191,6 +196,26 @@ const path = require('node:path');
   await page.waitForFunction(()=>document.querySelector('.result').textContent.includes('Rätt'));
   assert.deepEqual(await positions(),lockedBefore,'result row shift');
   await page.screenshot({path:path.join(directory,'coupon-results-390.png'),fullPage:true});
+  // Settled coupons become a readable waiting state and can replay a seen recap.
+  draw.status='settled'; draw.round_id=28; notify('live_draws',draw);
+  await page.getByRole('heading',{name:'Väntar på nya rader'}).waitFor();
+  for(const width of [320,390,1440]) {
+    await page.setViewportSize({width,height:844});
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth),width);
+    assert.equal(await page.locator('.matches').evaluate(el=>getComputedStyle(el).filter),'grayscale(1)');
+    assert.equal(await page.locator('.fetch-status').count(),0);
+    await page.screenshot({path:path.join(directory,`coupon-waiting-${width}.png`)});
+  }
+  await page.getByRole('button',{name:'Visa recap',exact:true}).click();
+  const recap=page.locator('app-round-recap-story dialog[open]'); await recap.waitFor();
+  assert.ok((await recap.innerText()).includes('Omgång 28 är avgjord'));
+  await recap.getByRole('button',{name:'Stäng recap',exact:true}).click(); await recap.waitFor({state:'hidden'});
+  assert.equal(await page.getByRole('button',{name:'Visa recap',exact:true}).evaluate(el=>el===document.activeElement),true);
+  nextDraw={...draw,draw_number:4972,round_number:29,status:'open',round_id:null,reg_close_time:new Date(Date.now()+86400000*4).toISOString()};
+  notify('live_draws',nextDraw);
+  await page.locator('.settled-panel').waitFor({state:'hidden'});
+  assert.ok((await page.locator('.draw-meta select').evaluate(el=>el.selectedOptions[0].textContent)).startsWith('29 ·'));
+  nextDraw=null; draw.status='locked'; draw.round_id=null;
   // Stale/missing values, error state and admin corrections are exercised separately.
   draw.last_error='Provider unavailable'; events[5].odds=null; events[5].crowd=null;
   syncFails=true; isAdmin=true;

@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Subject } from 'rxjs';
+import { BehaviorSubject, Subject, of } from 'rxjs';
+import { ApiService } from './api.service';
 import { AuthService } from './auth.service';
 import { SUPABASE } from './supabase.client';
 import { RoundRecapService } from './round-recap.service';
@@ -13,18 +14,41 @@ describe('RoundRecapService', () => {
   let service: RoundRecapService;
   let rpc: jasmine.Spy;
   let loggedIn: BehaviorSubject<boolean>;
+  let seasonQuery: jasmine.Spy;
+  let getRounds: jasmine.Spy;
   beforeEach(() => {
     loggedIn = new BehaviorSubject(true);
     rpc = jasmine.createSpy().and.resolveTo({data:{round_id:27,rounds:[round]},error:null});
+    seasonQuery = jasmine.createSpy().and.resolveTo({data:{season_id:1},error:null});
+    getRounds = jasmine.createSpy().and.returnValue(of([round,{...round,id:28,roundNumber:28,totalScore:13}]));
     TestBed.configureTestingModule({providers:[
-      {provide:SUPABASE,useValue:{rpc}},
+      {provide:SUPABASE,useValue:{rpc,from:()=>({select:()=>({eq:()=>({single:seasonQuery})})})}},
+      {provide:ApiService,useValue:{getRounds}},
       {provide:Router,useValue:{navigated:true,url:'/',events:new Subject()}},
-      {provide:AuthService,useValue:{identity:{player_id:1},isReady$:()=>new BehaviorSubject(true),
+      {provide:AuthService,useValue:{identity:{player_id:1},isLoggedInSnapshot:()=>loggedIn.value,isReady$:()=>new BehaviorSubject(true),
         isLoggedIn$:()=>loggedIn,getUserId$:()=>new BehaviorSubject('auth-device')}},
     ]});
     service = TestBed.inject(RoundRecapService);
   });
   const tick = async () => { await Promise.resolve(); await Promise.resolve(); };
+  it('reopens a seen round using its own season and excludes later results', async () => {
+    rpc.and.resolveTo({data:null,error:null}); service.start(); await tick();
+    await service.reopen(27);
+    expect(getRounds).toHaveBeenCalledWith(1);
+    expect(service.active()?.round.id).toBe(27);
+    expect(service.active()?.count).toBe(1);
+    expect(service.active()?.average).toBe(9);
+    expect(rpc.calls.count()).toBe(1); // opening does not write a receipt
+    await service.dismiss(); expect(service.active()).toBeNull();
+  });
+  it('does not display a historical response after membership is revoked', async () => {
+    rpc.and.resolveTo({data:null,error:null}); service.start(); await tick();
+    let resolve!: (value: unknown) => void;
+    seasonQuery.and.returnValue(new Promise(done=>resolve=done));
+    const opening = service.reopen(27); loggedIn.next(false);
+    resolve({data:{season_id:1},error:null}); await opening;
+    expect(service.active()).toBeNull();
+  });
   it('opens an unseen completed round without acknowledging it', async () => {
     service.start(); await tick();
     expect(service.active()?.round.id).toBe(27);
