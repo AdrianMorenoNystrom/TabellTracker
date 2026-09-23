@@ -9,6 +9,7 @@ import { MatIcon } from '@angular/material/icon';
 
 
 import { AuthService } from './services/auth.service';
+import { environment } from '../environments/environment';
 import { RoundRecapService } from './services/round-recap.service';
 import { RoundRecapStoryComponent } from './components/round-recap-story/round-recap-story.component';
 import { avatarLetter } from './utils/avatar';
@@ -56,6 +57,7 @@ export class App implements OnInit {
       if (!ready || member || !this.router.navigated) return;
       const destination = this.router.getCurrentNavigation()?.extractedUrl.toString() ?? this.router.url;
       const path = destination.split(/[?#]/, 1)[0];
+      if (!environment.production && path === '/dev/kupong') return;
       if (path === '/join' || path.startsWith('/join/') || path === '/admin/login') return;
       void this.router.navigateByUrl('/join');
     });

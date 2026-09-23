@@ -1,0 +1,13 @@
+* { box-sizing: border-box; font-family: Arial, sans-serif; }
+h2, p { margin: 0; }
+.eyebrow { font-size: 12px; color: #526373; }
+button { min-height: 44px; max-width: 100%; padding: 8px 12px; border: 1px solid #00427a; background: #00427a; color: white; font-size: 14px; font-weight: 700; cursor: pointer; }
+button:disabled { opacity: .65; cursor: default; }
+button:focus-visible { outline: 2px solid #00427a; outline-offset: 3px; }
+.secondary { background: white; color: #00427a; }
+.settled-panel { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; padding: 22px 18px; margin: 10px 0; background: #f1f5f8; border: 1px solid #dbe3e9; border-top: 3px solid var(--primary-blue); }
+.settled-icon { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: #e0e9ef; color: var(--primary-blue); font-size: 22px; }
+.settled-copy { flex: 1; min-width: 180px; }
+.settled-copy h2 { font-size: 21px; color: var(--primary-blue); margin: 4px 0; }
+.settled-copy > p:last-child { margin: 4px 0 0; color: #526373; font-size: 13px; }
+.settled-actions { display: flex; flex-wrap: wrap; gap: 8px; }

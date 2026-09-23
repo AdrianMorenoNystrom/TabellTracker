@@ -1,0 +1,11 @@
+      <section class="settled-panel" aria-labelledby="settled-title">
+        <div class="settled-icon" aria-hidden="true">✓</div>
+        <div class="settled-copy" aria-live="polite">
+          <p class="eyebrow">Omgång {{ draw.round_number }} är rättad</p>
+          <h2 id="settled-title">{{ next?.status === 'open' ? 'Omgången är färdig' : 'Väntar på nya rader' }}</h2>
+          <p>{{ next?.status === 'open' ? 'Du visar en tidigare omgång.' : 'Nästa kupong visas automatiskt när den är spelbar.' }}</p>
+        </div>
+        <div class="settled-actions">
+          <button type="button" [class.secondary]="!!next" (click)="!loading && openRecap.emit()" [disabled]="!draw.round_id" [attr.aria-disabled]="loading || !draw.round_id" [attr.aria-busy]="loading">{{ loading ? 'Hämtar recap…' : 'Visa recap' }}</button>
+        </div>
+      </section>

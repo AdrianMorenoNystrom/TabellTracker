@@ -3,7 +3,7 @@
     <div><h1>Stryktipset</h1><p class="eyebrow">{{ connection }}</p></div>
     <button class="overview-button" (click)="openOverview()" [disabled]="loading || !draw || events.length !== 13 || saving || drafts.size > 0">Översikt</button>
     <div class="refresh-tools">
-      @if (draw && events.length) {
+      @if (draw && events.length && !settled) {
         <div class="fetch-status" aria-live="polite">
           @for (update of marketUpdates; track update.label) {
             <div>{{ update.label }}<br>
@@ -41,14 +41,16 @@
       </select></label>
       <span>Spelstopp {{ time(draw.reg_close_time) }}</span>
     </div>
-    @if (locked) { <p class="banner">{{ draw.status === 'settled' ? 'Rättad · tabellen är uppdaterad' : 'Spelstopp · inväntar rättning' }}</p> }
+    @if (settled) {
+      <app-coupon-settled [draw]="draw" [next]="nextDraw" [loading]="recapLoading" (openRecap)="openRecap()" />
+    } @else if (locked) { <p class="banner">Spelstopp · inväntar rättning</p> }
     @if (draw.status === 'draft' && !locked) { <p class="banner">Kupongen har inte öppnat ännu.</p> }
     @if (stale) { <p class="banner">Senast sparade uppgifter visas. Senaste hämtning: {{ time(draw.retrieved_at) }}.</p> }
-    <section class="team-status" aria-labelledby="team-status-title">
+    <section class="team-status" [class.finished]="settled && !adminMode" aria-labelledby="team-status-title">
       <div class="team-heading"><h2 id="team-status-title">Lagets rader</h2><button class="text-button" (click)="openColors()">Färger</button></div>
       <div class="player-statuses" aria-live="polite">
         @for (player of players; track player.id) {
-          @let state = rowState(player.id);
+          @let state = settled ? 'Rättad' : rowState(player.id);
           <div class="player-status">
             <div class="player-heading">
               <strong class="player-label" [style.--player-color]="playerColor(player.id)">{{ player.name }}</strong>
@@ -71,7 +73,7 @@
         </select></label>
       }
     }
-    <div class="matches">
+    <div class="matches" [class.finished]="settled && !adminMode">
       @for (event of events; track event.event_number) {
         <article class="match" [class.mine]="owner(event) === auth.identity?.player_id"
           [style.border-left-color]="owner(event) === null ? 'transparent' : playerColor(owner(event))"

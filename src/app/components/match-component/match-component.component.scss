@@ -33,6 +33,7 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px s
 .draw-meta select { min-width: 0; }
 .banner, .error { margin: 6px 0; padding: 8px 10px; font-size: 13px; background: #fff5dc; border-left: 3px solid #946600; }
 .error { color: #942b22; background: #fff1f0; border-color: #942b22; }
+.finished { filter: grayscale(1); background: #f5f6f7; }
 .complete, .result.correct { color: #186343; }
 .team-status { padding: 10px 0; }
 .team-heading { display: flex; align-items: center; justify-content: space-between; }
